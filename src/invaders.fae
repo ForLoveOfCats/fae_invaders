@@ -1,0 +1,73 @@
+import faylib::Color, Vec2, init_window, window_should_close, set_target_fps, get_frame_time
+import faylib::clear_background, begin_drawing, end_drawing, draw_rectangle
+
+const BoxSize = 100
+const HalfBoxSize = BoxSize / 2
+
+fn main() {
+	let window_size = Vec2 { x: 800, y: 600 }
+	init_window(800, 600, "Fae Raylib".pointer)
+	set_target_fps(144)
+
+	mut box = Box.new(window_size)
+
+	while window_should_close().! {
+		box.tick(window_size)
+
+		begin_drawing()
+		defer end_drawing()
+		clear_background(Color.rgb(255, 255, 255))
+
+		box.draw()
+	}
+}
+
+struct Box {
+	position: Vec2
+	velocity: Vec2
+}
+
+method static Box
+fn new(window_size: Vec2): Box {
+	let position = Vec2 { x: window_size.x / 2, y: window_size.y / 2 }
+	let velocity = Vec2 { x: 400, y: 200 }
+	return Box { position, velocity }
+}
+
+method mut Box
+fn tick(window_size: Vec2) {
+	let delta = get_frame_time()
+	self.position.x += self.velocity.x * delta
+	self.position.y += self.velocity.y * delta
+
+	let left = self.position.x - HalfBoxSize
+	let right = self.position.x + HalfBoxSize
+	let top = self.position.y - HalfBoxSize
+	let bottom = self.position.y + HalfBoxSize
+
+	if left < 0 {
+		self.position.x = HalfBoxSize
+		self.velocity.x = -self.velocity.x
+	} else if right > window_size.x {
+		self.position.x = window_size.x - HalfBoxSize
+		self.velocity.x = -self.velocity.x
+	}
+
+	if top < 0 {
+		self.position.y = HalfBoxSize
+		self.velocity.y = -self.velocity.y
+	} else if bottom > window_size.y {
+		self.position.y = window_size.y - HalfBoxSize
+		self.velocity.y = -self.velocity.y
+	}
+}
+
+method Box
+fn draw() {
+	let position = Vec2 {
+		x: self.position.x - HalfBoxSize
+		y: self.position.y - HalfBoxSize
+	}
+	let size = Vec2 { x: BoxSize, y: BoxSize }
+	draw_rectangle(position, size, Color.rgb(255, 0, 0))
+}

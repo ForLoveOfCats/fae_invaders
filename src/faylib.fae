@@ -1,0 +1,53 @@
+extern "InitWindow"
+fn init_window(width: i32, height: i32, title: &u8)
+
+extern "CloseWindow"
+fn close_window()
+
+extern "WindowShouldClose"
+fn window_should_close(): bool
+
+extern "ClearBackground"
+fn clear_background(color: Color)
+
+extern "BeginDrawing"
+fn begin_drawing()
+
+extern "EndDrawing"
+fn end_drawing()
+
+extern "SetTargetFPS"
+fn set_target_fps(fps: i32)
+
+extern "GetFrameTime"
+fn get_frame_time(): f32
+
+extern "DrawRectangleV"
+fn draw_rectangle(position: Vec2, size: Vec2, color: Color)
+
+struct Color {
+	r: u8
+	g: u8
+	b: u8
+	a: u8
+}
+
+method static Color
+fn rgb(r: u8, g: u8, b: u8): Color {
+	return Color { r, g, b, a: 255 }
+}
+
+method static Color
+fn rgba(r: u8, g: u8, b: u8, a: u8): Color {
+	return Color { r, g, b, a }
+}
+
+struct Vec2 {
+	x: f32
+	y: f32
+}
+
+method static Vec2
+fn zero(): Vec2 {
+	return Vec2 { x: 0, y: 0 }
+}
