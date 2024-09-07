@@ -1,10 +1,12 @@
-import faylib::Color, Vec2, init_window, window_should_close, set_target_fps, get_frame_time
+import faylib::Color, Vec2, init_window, window_should_close
+import faylib::set_target_fps, get_frame_time, set_trace_log_level
 import faylib::clear_background, begin_drawing, end_drawing, draw_rectangle
 
 const BoxSize = 100
 const HalfBoxSize = BoxSize / 2
 
 fn main() {
+	set_trace_log_level(faylib::LogWarning)
 	let window_size = Vec2 { x: 800, y: 600 }
 	init_window(800, 600, "Fae Raylib".pointer)
 	set_target_fps(144)

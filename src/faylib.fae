@@ -1,3 +1,12 @@
+const LogAll = 0
+const LogTrace = 1
+const LogDebug = 2
+const LogInfo = 3
+const LogWarning = 4
+const LogError = 5
+const LogFatal = 6
+const LogNone = 7
+
 extern "InitWindow"
 fn init_window(width: i32, height: i32, title: &u8)
 
@@ -21,6 +30,9 @@ fn set_target_fps(fps: i32)
 
 extern "GetFrameTime"
 fn get_frame_time(): f32
+
+extern "SetTraceLogLevel"
+fn set_trace_log_level(log_level: i32)
 
 extern "DrawRectangleV"
 fn draw_rectangle(position: Vec2, size: Vec2, color: Color)
