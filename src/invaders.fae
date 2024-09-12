@@ -18,7 +18,7 @@ fn main() {
 
 		begin_drawing()
 		defer end_drawing()
-		clear_background(Color.rgb(255, 255, 255))
+		clear_background(Color.white())
 
 		box.draw()
 	}

@@ -37,11 +37,31 @@ fn set_trace_log_level(log_level: i32)
 extern "DrawRectangleV"
 fn draw_rectangle(position: Vec2, size: Vec2, color: Color)
 
+extern "LoadImage"
+fn load_image(path: &u8): Image
+
+extern "LoadTexture"
+fn load_texture(path: &u8): Texture2D
+
+extern "LoadTextureFromImage"
+fn load_texture_from_image(image: Image): Texture2D
+
+extern "UnloadTexture"
+fn unload_texture(texture: Texture2D)
+
+extern "DrawTextureV"
+fn draw_texture(texture: Texture2D, position: Vec2, tint: Color)
+
 struct Color {
 	r: u8
 	g: u8
 	b: u8
 	a: u8
+}
+
+method static Color
+fn white(): Color {
+	return Color { r: 255, g: 255, b: 255, a: 255 }
 }
 
 method static Color
@@ -62,4 +82,20 @@ struct Vec2 {
 method static Vec2
 fn zero(): Vec2 {
 	return Vec2 { x: 0, y: 0 }
+}
+
+struct Image {
+	data: &mut u8
+	width: i32
+	height: i32
+	mipmaps: i32
+	format: i32
+}
+
+struct Texture2D {
+	id: u32
+	width: i32
+	height: i32
+	mipmaps: i32
+	format: i32
 }
