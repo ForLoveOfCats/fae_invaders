@@ -16,6 +16,12 @@ fn close_window()
 extern "WindowShouldClose"
 fn window_should_close(): bool
 
+extern "GetCurrentMonitor"
+fn get_current_monitor(): Monitor
+
+extern "GetMonitorRefreshRate"
+fn get_monitor_refresh_rate(monitor: Monitor): i32
+
 extern "ClearBackground"
 fn clear_background(color: Color)
 
@@ -51,6 +57,10 @@ fn unload_texture(texture: Texture2D)
 
 extern "DrawTextureV"
 fn draw_texture(texture: Texture2D, position: Vec2, tint: Color)
+
+struct Monitor {
+	id: i32
+}
 
 struct Color {
 	r: u8

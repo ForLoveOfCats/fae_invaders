@@ -1,28 +1,62 @@
-import faylib::Color, Vec2, init_window, window_should_close
-import faylib::set_target_fps, get_frame_time, set_trace_log_level
-import faylib::clear_background, begin_drawing, end_drawing, draw_rectangle
+import faylib::Color, Vec2, Texture2D
+import faylib::get_frame_time, clear_background, begin_drawing, end_drawing
 
-const BoxSize = 100
-const HalfBoxSize = BoxSize / 2
+struct Textures {
+	player: Texture2D
+}
+
+method static Textures
+fn load(): Textures {
+	import faylib::load_texture
+
+	return Textures {
+		player: load_texture("./assets/player.png".pointer)
+	}
+}
+
+method Textures
+fn free() {
+	import faylib::unload_texture
+
+	unload_texture(self.player)
+}
+
+fn set_up_window(): Vec2 {
+	const WindowWidth = 2600
+	const WindowHeight = 2000
+
+	faylib::set_trace_log_level(faylib::LogWarning)
+	faylib::init_window(WindowWidth, WindowHeight, "Fae Raylib".pointer)
+
+	let monitor = faylib::get_current_monitor()
+	let refresh_rate = faylib::get_monitor_refresh_rate(monitor)
+	faylib::set_target_fps(refresh_rate)
+	println(f"Set refresh rate of {refresh_rate}hz")
+
+	return Vec2 { x: WindowWidth, y: WindowHeight }
+}
 
 fn main() {
-	set_trace_log_level(faylib::LogWarning)
-	let window_size = Vec2 { x: 800, y: 600 }
-	init_window(800, 600, "Fae Raylib".pointer)
-	set_target_fps(144)
+	let window_size = set_up_window()
+
+	let textures = Textures.load()
+	defer textures.free()
 
 	mut box = Box.new(window_size)
 
-	while window_should_close().! {
+	while faylib::window_should_close().! {
 		box.tick(window_size)
 
 		begin_drawing()
 		defer end_drawing()
 		clear_background(Color.white())
 
-		box.draw()
+		box.draw(textures.&)
 	}
 }
+
+const BoxSize = 150
+const HalfBoxSize = BoxSize / 2
 
 struct Box {
 	position: Vec2
@@ -65,11 +99,10 @@ fn tick(window_size: Vec2) {
 }
 
 method Box
-fn draw() {
+fn draw(textures: &Textures) {
 	let position = Vec2 {
 		x: self.position.x - HalfBoxSize
 		y: self.position.y - HalfBoxSize
 	}
-	let size = Vec2 { x: BoxSize, y: BoxSize }
-	draw_rectangle(position, size, Color.rgb(255, 0, 0))
+	faylib::draw_texture(textures.player, position, Color.white())
 }
