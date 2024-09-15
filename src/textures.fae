@@ -1,0 +1,53 @@
+import faylib::Color, Vec2, Texture2D
+
+struct Textures {
+	player: Texture2D
+	enemy: Texture2D
+	bomb: Texture2D
+	missile: Texture2D
+}
+
+method static Textures
+fn load(): Textures {
+	import faylib::load_texture
+
+	return Textures {
+		player: load_texture("./assets/player.png".pointer)
+		enemy: load_texture("./assets/enemy.png".pointer)
+		bomb: load_texture("./assets/bomb.png".pointer)
+		missile: load_texture("./assets/missile.png".pointer)
+	}
+}
+
+method Textures
+fn free() {
+	import faylib::unload_texture
+
+	unload_texture(self.player)
+}
+
+fn draw_sprite(texture: Texture2D, mut position: Vec2) {
+	position.x -= texture.width.(f32) / 2
+	position.y -= texture.width.(f32) / 2
+	faylib::draw_texture(texture, position, Color.white())
+}
+
+fn is_sprite_past_left(_window_size: Vec2, texture: Texture2D, position: Vec2): bool {
+	let x = position.x - texture.width.(f32) / 2
+	return x < 0
+}
+
+fn is_sprite_past_right(window_size: Vec2, texture: Texture2D, position: Vec2): bool {
+	let x = position.x + texture.width.(f32) / 2
+	return x > window_size.x
+}
+
+fn is_sprite_past_top(_window_size: Vec2, texture: Texture2D, position: Vec2): bool {
+	let y = position.y - texture.height.(f32) / 2
+	return y < 0
+}
+
+fn is_sprite_past_bottom(window_size: Vec2, texture: Texture2D, position: Vec2): bool {
+	let y = position.y + texture.height.(f32) / 2
+	return y > window_size.y
+}

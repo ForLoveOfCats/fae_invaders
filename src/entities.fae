@@ -1,0 +1,75 @@
+import fae::collections::list::List
+
+import faylib::Vec2
+import textures::Textures, is_sprite_past_left, is_sprite_past_right
+import textures::is_sprite_past_top, is_sprite_past_bottom, draw_sprite
+
+struct Entities {
+	player: List<Player>
+	enemy: List<Enemy>
+	bomb: List<Bomb>
+	missile: List<Missile>
+}
+
+method static Entities
+fn new(): Entities {
+	return Entities {
+		player: List<Player>.new()
+		enemy: List<Enemy>.new()
+		bomb: List<Bomb>.new()
+		missile: List<Missile>.new()
+	}
+}
+
+method mut Entities
+fn tick(window_size: Vec2, textures: &Textures, delta: f32) {
+	for player of self.player.items => player.tick(window_size, textures, delta)
+	for enemy of self.enemy.items => enemy.tick(window_size, textures, delta)
+	for bomb of self.bomb.items => bomb.tick(window_size, textures, delta)
+	for missile of self.missile.items => missile.tick(window_size, textures, delta)
+}
+
+method mut Entities
+fn free() {
+	self.player.free()
+	self.enemy.free()
+	self.bomb.free()
+	self.missile.free()
+}
+
+struct Player {
+	position: Vec2
+}
+
+method mut Player
+fn tick(window_size: Vec2, textures: &Textures, delta: f32) {
+	import faylib::is_key_down
+
+	const Speed = 1500
+
+	if is_key_down(key::KeyA) => self.position.x -= Speed * delta
+	if is_key_down(key::KeyD) => self.position.x += Speed * delta
+
+	if is_sprite_past_left(window_size, textures.player, self.position) {
+		self.position.x = textures.player.width.(f32) / 2
+	} else if is_sprite_past_right(window_size, textures.player, self.position) {
+		self.position.x = window_size.x - textures.player.width.(f32) / 2
+	}
+
+	draw_sprite(textures.player, self.position)
+}
+
+struct Enemy {}
+
+method mut Enemy
+fn tick(window_size: Vec2, textures: &Textures, delta: f32) {}
+
+struct Bomb {}
+
+method mut Bomb
+fn tick(window_size: Vec2, textures: &Textures, delta: f32) {}
+
+struct Missile {}
+
+method mut Missile
+fn tick(window_size: Vec2, textures: &Textures, delta: f32) {}

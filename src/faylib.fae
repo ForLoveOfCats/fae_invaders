@@ -58,6 +58,9 @@ fn unload_texture(texture: Texture2D)
 extern "DrawTextureV"
 fn draw_texture(texture: Texture2D, position: Vec2, tint: Color)
 
+extern "IsKeyDown"
+fn is_key_down(key: i32): bool
+
 struct Monitor {
 	id: i32
 }

@@ -1,25 +1,9 @@
+import fae::collections::list::List
+
 import faylib::Color, Vec2, Texture2D
-import faylib::get_frame_time, clear_background, begin_drawing, end_drawing
+import textures::Textures
+import entities::Entities, Player
 
-struct Textures {
-	player: Texture2D
-}
-
-method static Textures
-fn load(): Textures {
-	import faylib::load_texture
-
-	return Textures {
-		player: load_texture("./assets/player.png".pointer)
-	}
-}
-
-method Textures
-fn free() {
-	import faylib::unload_texture
-
-	unload_texture(self.player)
-}
 
 fn set_up_window(): Vec2 {
 	const WindowWidth = 2600
@@ -42,67 +26,22 @@ fn main() {
 	let textures = Textures.load()
 	defer textures.free()
 
-	mut box = Box.new(window_size)
+	mut entities = Entities.new()
+	defer entities.free()
+
+	entities.player.push(Player {
+		position: Vec2 {
+			x: window_size.x / 2
+			y: window_size.y - textures.player.height.(f32)
+		}
+	})
 
 	while faylib::window_should_close().! {
-		box.tick(window_size)
+		faylib::begin_drawing()
+		defer faylib::end_drawing()
 
-		begin_drawing()
-		defer end_drawing()
-		clear_background(Color.white())
+		faylib::clear_background(Color.white())
 
-		box.draw(textures.&)
+		entities.tick(window_size, textures.&, faylib::get_frame_time())
 	}
-}
-
-const BoxSize = 150
-const HalfBoxSize = BoxSize / 2
-
-struct Box {
-	position: Vec2
-	velocity: Vec2
-}
-
-method static Box
-fn new(window_size: Vec2): Box {
-	let position = Vec2 { x: window_size.x / 2, y: window_size.y / 2 }
-	let velocity = Vec2 { x: 400, y: 200 }
-	return Box { position, velocity }
-}
-
-method mut Box
-fn tick(window_size: Vec2) {
-	let delta = get_frame_time()
-	self.position.x += self.velocity.x * delta
-	self.position.y += self.velocity.y * delta
-
-	let left = self.position.x - HalfBoxSize
-	let right = self.position.x + HalfBoxSize
-	let top = self.position.y - HalfBoxSize
-	let bottom = self.position.y + HalfBoxSize
-
-	if left < 0 {
-		self.position.x = HalfBoxSize
-		self.velocity.x = -self.velocity.x
-	} else if right > window_size.x {
-		self.position.x = window_size.x - HalfBoxSize
-		self.velocity.x = -self.velocity.x
-	}
-
-	if top < 0 {
-		self.position.y = HalfBoxSize
-		self.velocity.y = -self.velocity.y
-	} else if bottom > window_size.y {
-		self.position.y = window_size.y - HalfBoxSize
-		self.velocity.y = -self.velocity.y
-	}
-}
-
-method Box
-fn draw(textures: &Textures) {
-	let position = Vec2 {
-		x: self.position.x - HalfBoxSize
-		y: self.position.y - HalfBoxSize
-	}
-	faylib::draw_texture(textures.player, position, Color.white())
 }
