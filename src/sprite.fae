@@ -1,0 +1,87 @@
+import faylib::Color, Vec2, Texture2D
+
+struct Textures {
+	player: Texture2D
+	enemy: Texture2D
+	bomb: Texture2D
+	missile: Texture2D
+}
+
+method static Textures
+fn load(): Textures {
+	import faylib::load_texture
+
+	return Textures {
+		player: load_texture("./assets/player.png".pointer)
+		enemy: load_texture("./assets/enemy.png".pointer)
+		bomb: load_texture("./assets/bomb.png".pointer)
+		missile: load_texture("./assets/missile.png".pointer)
+	}
+}
+
+method Textures
+fn free() {
+	import faylib::unload_texture
+
+	unload_texture(self.player)
+}
+
+struct Sprite {
+	texture: &Texture2D
+	position: Vec2
+}
+
+struct ReachedEdge {
+	left: bool
+	right: bool
+	top: bool
+	bottom: bool
+}
+
+method mut Sprite
+fn move(window_size: Vec2, distance: Vec2): ReachedEdge {
+	mut reached = ReachedEdge {
+		left: false
+		right: false
+		top: false
+		bottom: false
+	}
+
+	self.position.x += distance.x
+	self.position.y += distance.y
+
+	let half_width = self.texture.width.(f32) / 2
+	let half_height = self.texture.height.(f32) / 2
+
+	let left = self.position.x - half_width
+	let right = self.position.x + half_width
+	let top = self.position.y - half_height
+	let bottom = self.position.y + half_height
+
+	if left < 0 {
+		self.position.x = half_width
+		reached.left = true
+	} else if right > window_size.x {
+		self.position.x = window_size.x - half_width
+		reached.right = true
+	}
+
+	if top < 0 {
+		self.position.y = half_height
+		reached.top = true
+	} else if bottom > window_size.y {
+		self.position.y = window_size.y - half_height
+		reached.bottom = true
+	}
+
+	return reached
+}
+
+method Sprite
+fn draw() {
+	let position = Vec2 {
+		x: self.position.x - self.texture.width.(f32) / 2
+		y: self.position.y - self.texture.height.(f32) / 2
+	}
+	faylib::draw_texture(self.texture.*, position, Color.white())
+}

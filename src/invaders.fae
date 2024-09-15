@@ -1,7 +1,5 @@
-import fae::collections::list::List
-
-import faylib::Color, Vec2, Texture2D
-import textures::Textures
+import faylib::Color, Vec2
+import sprite::Textures
 import entities::Entities, Player
 
 
@@ -29,12 +27,7 @@ fn main() {
 	mut entities = Entities.new()
 	defer entities.free()
 
-	entities.player.push(Player {
-		position: Vec2 {
-			x: window_size.x / 2
-			y: window_size.y - textures.player.height.(f32)
-		}
-	})
+	Player.spawn(textures.&, entities.&mut, window_size)
 
 	while faylib::window_should_close().! {
 		faylib::begin_drawing()
@@ -42,6 +35,6 @@ fn main() {
 
 		faylib::clear_background(Color.white())
 
-		entities.tick(window_size, textures.&, faylib::get_frame_time())
+		entities.tick(textures.&, window_size, faylib::get_frame_time())
 	}
 }
