@@ -3,113 +3,397 @@ import fae::collections::list::List
 import faylib::Vec2
 import sprite::Sprite, Textures
 
+const SlabSize = 10
+
+// TODO: Make fields internal once language has traits
 generic T
 struct EntityList {
-	entities: List<T> readable
-	presence: List<bool> readable
-	holes: List<isize> readable
+	slabs: List<Slab<T>>
+	slab_ids: List<SlabId>
+
+	next_slab_id: i64
+
+	// Number of slabs at the beginning of the
+	// slab list which are completely full
+	// <= live_length
+	full_length: isize
+
+	// Number of slabs at the beginning of the
+	// slab list which are non-empty
+	// >= full_length
+	live_length: isize
 }
 
 method static EntityList
 fn new(): EntityList<T> {
+	assert(size_of<T>() > 0)
+
+	mut slabs = List<Slab<T>>.new()
+	let slab_id = SlabId { id: 0 }
+	slabs.push(Slab<T>.new(slab_id))
+
+	mut slab_ids = List<SlabId>.new()
+	slab_ids.push(slab_id)
+
 	return EntityList<T> {
-		entities: List<T>.new()
-		presence: List<bool>.new()
-		holes: List<isize>.new()
+		slabs
+		slab_ids
+		next_slab_id: 1
+		full_length: 0
+		live_length: 1
 	}
 }
 
 method mut EntityList
 fn free() {
-	self.entities.free()
-	self.presence.free()
-	self.holes.free()
+	for slab of self.slabs.items => slab.free()
+	self.slabs.free()
+	self.slab_ids.free()
 }
 
 method mut EntityList
-fn push(entity: T) {
-	self.entities.push(entity)
-	self.presence.push(true)
+fn make_next_slab_id(): SlabId {
+	let id = self.next_slab_id
+	self.next_slab_id += 1
+	return SlabId { id }
 }
 
 method mut EntityList
-fn remove(index: isize) {
-	self.presence.items[index] = false
+fn iterator(): EntityIterator<T> {
+	return EntityIterator<T> {
+		list: self
+		slab_id: self.slab_ids.first().unwrap()
+		slab_index: 0
+		entity_index: 0
+	}
 }
 
 method mut EntityList
-fn entity(index: isize): &mut T {
-	return self.entities.items[index].&mut
+fn push(entity: T): EntityLocator<T> {
+	assert(self.full_length <= self.live_length)
+	assert(self.slabs.items.length == self.slab_ids.items.length)
+
+	// Push to the first live but not full slab if possible
+	if self.full_length < self.live_length {
+		let slab = self.slabs.get_mut(self.full_length)
+		let locator = slab.push(entity)
+		// If this makes the slab full, include it in the full count
+		if slab.is_full() => self.full_length += 1
+		return locator
+	}
+
+	// Else push to the first empty slab if possible
+	if self.live_length < self.slabs.items.length {
+		let slab = self.slabs.get_mut(self.live_length)
+		let locator = slab.push(entity)
+		assertf(
+			slab.is_not_full()
+			f"entity_count: {slab.entity_count}, SlabId: {slab.slab_id.id}"
+		) // Sanity check that capacity > 1
+		self.live_length += 1
+		return locator
+	}
+
+	// Otherwise we know all slabs are full
+	let slab_id = self.make_next_slab_id()
+	mut slab = Slab<T>.new(slab_id)
+	let locator = slab.push(entity)
+	assert(slab.is_not_full()) // Sanity check that capacity > 1
+
+	self.slabs.push(slab)
+	self.slab_ids.push(slab_id)
+	self.live_length += 1
+
+	return locator
+}
+
+method mut EntityList
+fn remove(locator: EntityLocator<T>) {
+	println(f"removing from SlabId {locator.slab_id.id}")
+	for slab_id, slab_index in self.slab_ids.items {
+		if slab_id.id == locator.slab_id.id {
+			self.remove_entity_from_slab(locator, slab_index)
+			return
+		}
+	}
+
+	panicf(f"Failed to find slab for slab id {locator.slab_id.id}")
+}
+
+method mut EntityList
+fn remove_entity_from_slab(locator: EntityLocator<T>, slab_index: isize) {
+	let slab = self.slabs.get_mut(slab_index)
+	slab.remove(locator.entity)
+
+	if slab_index < self.full_length {
+		self.move_slab_from_full_into_non_full(slab_index)
+	} else if slab.is_empty() {
+		self.move_slab_from_non_full_into_empty(slab_index)
+	}
+}
+
+method mut EntityList
+fn move_slab_from_full_into_non_full(slab_index: isize) {
+	// We know that this slab was is currently in the full section
+
+	let not_on_boundary = slab_index != self.full_length - 1
+	let full_section_has_other = self.full_length > 2
+
+	// If there is a slab on the boundary which is not us, then swap
+	if full_section_has_other and not_on_boundary {
+		let itself = self.slabs.get_mut(slab_index)
+		let on_boundary = self.slabs.get_mut(self.full_length - 1)
+		fae::memory::swap<Slab<T>>(itself, on_boundary)
+
+		let itself = self.slab_ids.get_mut(slab_index)
+		let on_boundary = self.slab_ids.get_mut(self.full_length - 1)
+		fae::memory::swap<SlabId>(itself, on_boundary)
+	}
+
+	// If we are on the boundary or there are no other slabs
+	// in the full section we need not swap anything
+	// There being no other slabs in the full section implies
+	// that we are on the boundary anyway
+
+	self.full_length -= 1
+}
+
+method mut EntityList
+fn move_slab_from_non_full_into_empty(slab_index: isize) {
+	// We know that this slab must have been in the live
+	// but not full section because of the asserts that
+	// slabs must be able to contain more than one entity
+
+	let not_on_boundary = slab_index != self.live_length - 1
+	let non_empty_section_has_other = self.live_length - self.full_length > 2
+
+	// If there is a slab on the boundary which is not us, then swap
+	if non_empty_section_has_other and not_on_boundary {
+		let itself = self.slabs.get_mut(slab_index)
+		let on_boundary = self.slabs.get_mut(self.live_length - 1)
+		fae::memory::swap<Slab<T>>(itself, on_boundary)
+
+		let itself = self.slab_ids.get_mut(slab_index)
+		let on_boundary = self.slab_ids.get_mut(self.live_length - 1)
+		fae::memory::swap<SlabId>(itself, on_boundary)
+	}
+
+	// If we are on the boundary or there are no other slabs
+	// in the non-empty section we need not swap anything
+	// There being no other slabs in the non-empty section
+	// implies that we are on the boundary anyway
+
+	self.live_length -= 1
+}
+
+generic T
+struct EntityLocator {
+	slab_id: SlabId readonly
+	entity: &mut T readonly
+}
+
+struct SlabId {
+	id: i64 readonly
+}
+
+// TODO: Make fields internal once language has traits
+generic T
+struct Slab {
+	slab_id: SlabId readonly
+
+	slice: []mut T readonly
+	presence: []mut bool readonly
+
+	entity_count: isize
+	first_absence: isize
+}
+
+method static Slab
+fn new(slab_id: SlabId): Slab<T> {
+	import fae::memory::allocate_slice_space, set_slice_bytes
+
+	let presence = allocate_slice_space<bool>(SlabSize)
+	set_slice_bytes<bool>(presence, 0)
+
+	return Slab<T> {
+		slab_id
+		slice: allocate_slice_space<T>(SlabSize)
+		presence
+		entity_count: 0
+		first_absence: 0
+	}
+}
+
+method mut Slab
+fn free() {
+	import fae::memory::free_slice
+	free_slice<T>(self.slice)
+	free_slice<bool>(self.presence)
+}
+
+method Slab
+fn is_full(): bool {
+	return self.entity_count >= SlabSize
+}
+
+method Slab
+fn is_not_full(): bool {
+	return self.entity_count < SlabSize
+}
+
+method Slab
+fn is_empty(): bool {
+	return self.entity_count == 0
+}
+
+method Slab
+fn is_not_empty(): bool {
+	return self.entity_count > 0
+}
+
+method mut Slab
+fn push(entity: T): EntityLocator<T> {
+	assert(self.first_absence < SlabSize)
+	let entity_pointer = self.slice[self.first_absence].&mut
+	entity_pointer.* = entity
+	self.presence[self.first_absence] = true
+
+	self.entity_count += 1
+	self.first_absence += 1
+
+	while self.first_absence < SlabSize {
+		if self.presence[self.first_absence].! => break
+		self.first_absence += 1
+	}
+
+	return EntityLocator<T> {
+		slab_id: self.slab_id
+		entity: entity_pointer
+	}
+}
+
+method mut Slab
+fn remove(entity: &T) {
+	let slice_start = self.slice.pointer.(isize)
+	let entity_offset = entity.(isize) - slice_start
+	let entity_index = entity_offset / size_of<T>()
+
+	assertf(0 <= entity_index and entity_index < SlabSize, f"{entity_index}")
+	if self.presence[entity_index] => self.entity_count -= 1
+	self.presence[entity_index] = false
+
+	if entity_index < self.first_absence {
+		self.first_absence = entity_index
+	}
+}
+
+// TODO: This is less than ideal, replace once languge has traits
+generic T
+struct EntityIterator {
+	list: &mut EntityList<T>
+	slab_id: SlabId
+	slab_index: isize
+	entity_index: isize
+}
+
+// I really *really* dislike having to write iteration like this
+method mut EntityIterator
+fn next(): Option<&mut T> {
+	if self.slab_index >= self.list.slabs.length() => return .None
+
+	while true {
+		if self.entity_index >= SlabSize {
+			self.slab_index += 1
+			self.entity_index = 0
+
+			if self.slab_index < self.list.slabs.length() {
+				let slab = self.list.slabs.get_ref(self.slab_index)
+				self.slab_id = slab.slab_id
+			}
+			else => return .None
+		}
+
+		let slab = self.list.slabs.get_ref(self.slab_index)
+		if slab.presence[self.entity_index].! => self.entity_index += 1
+		else => break
+	}
+
+	let slab = self.list.slabs.get_mut(self.slab_index)
+	defer self.entity_index += 1
+	return .Some(slab.slice[self.entity_index].&mut)
 }
 
 struct Entities {
 	player: EntityList<Player>
-	enemy: EntityList<Enemy>
-	bomb: EntityList<Bomb>
 	missile: EntityList<Missile>
+	// enemy: EntityList<Enemy>
+	// bomb: EntityList<Bomb>
 }
 
 method static Entities
 fn new(): Entities {
 	return Entities {
 		player: EntityList<Player>.new()
-		enemy: EntityList<Enemy>.new()
-		bomb: EntityList<Bomb>.new()
 		missile: EntityList<Missile>.new()
+		// enemy: EntityList<Enemy>.new()
+		// bomb: EntityList<Bomb>.new()
 	}
 }
 
+generic T
 struct Context {
 	window_size: Vec2
 	textures: &Textures
 	entities: &mut Entities
 	delta: f32
-	entity_index: isize
+	entity_locator: EntityLocator<T>
 }
 
 method mut Entities
 fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
-	mut context = Context {
-		window_size
-		textures
-		entities: self
-		delta
-		entity_index: 0
-	}
-
 	// Newly added entities are not ticked until the following frame
 
-	for index in 0..self.player.entities.items.length {
-		if self.player.presence.items[index].! => continue
-		context.entity_index = index
-		self.player.entity(index).tick(context.&mut)
+	mut iterator: EntityIterator<Player> = self.player.iterator()
+	while iterator.next() is entity: Some {
+		mut context = Context<Player> {
+			window_size
+			textures
+			entities: self
+			delta
+			entity_locator: EntityLocator<Player> {
+				slab_id: iterator.slab_id
+				entity
+			}
+		}
+
+		entity.tick(context.&mut)
 	}
 
-	for index in 0..self.enemy.entities.items.length {
-		if self.enemy.presence.items[index].! => continue
-		context.entity_index = index
-		self.enemy.entity(index).tick(context.&mut)
+	mut iterator: EntityIterator<Missile> = self.missile.iterator()
+	while iterator.next() is entity: Some {
+		mut context = Context<Missile> {
+			window_size
+			textures
+			entities: self
+			delta
+			entity_locator: EntityLocator<Missile> {
+				slab_id: iterator.slab_id
+				entity
+			}
+		}
+
+		entity.tick(context.&mut)
 	}
 
-	for index in 0..self.bomb.entities.items.length {
-		if self.bomb.presence.items[index].! => continue
-		context.entity_index = index
-		self.bomb.entity(index).tick(context.&mut)
-	}
-
-	for index in 0..self.missile.entities.items.length {
-		if self.missile.presence.items[index].! => continue
-		context.entity_index = index
-		self.missile.entity(index).tick(context.&mut)
-	}
+	// for slab, _, is_last of self.missile.slabs
 }
 
 method mut Entities
 fn free() {
 	self.player.free()
-	self.enemy.free()
-	self.bomb.free()
 	self.missile.free()
+	// self.enemy.free()
+	// self.bomb.free()
 }
 
 struct Player {
@@ -132,11 +416,11 @@ fn spawn(textures: &Textures, entities: &mut Entities, window_size: Vec2) {
 }
 
 method mut Player
-fn tick(context: &Context) {
+fn tick(context: &mut Context<Player>) {
 	import faylib::is_key_down
 
 	const Speed = 1500 // Pixels per second
-	const FireDelay = 0.1 // Seconds
+	const FireDelay = 0 // Seconds
 
 	mut distance = Vec2.zero()
 	if is_key_down(key::A) => distance.x -= Speed * context.delta
@@ -157,16 +441,6 @@ fn tick(context: &Context) {
 	self.sprite.draw()
 }
 
-struct Enemy {}
-
-method mut Enemy
-fn tick(_context: &Context) {}
-
-struct Bomb {}
-
-method mut Bomb
-fn tick(_context: &Context) {}
-
 struct Missile {
 	sprite: Sprite
 }
@@ -182,13 +456,23 @@ fn fire(textures: &Textures, entities: &mut Entities, position: Vec2) {
 }
 
 method mut Missile
-fn tick(context: &mut Context) {
+fn tick(context: &mut Context<Missile>) {
 	const Speed = 1000 // Pixels per second
 
 	let speed = Speed * context.delta
 	let distance = Vec2 { x: 0, y: -speed }
 	let reached = self.sprite.move(context.window_size, distance)
 
-	if reached.top => context.entities.missile.remove(context.entity_index)
+	if reached.top => context.entities.missile.remove(context.entity_locator)
 	else => self.sprite.draw()
 }
+
+// struct Enemy {}
+
+// method mut Enemy
+// fn tick(_context: &Context<Enemy>) {}
+
+// struct Bomb {}
+
+// method mut Bomb
+// fn tick(_context: &Context<Bomb>) {}

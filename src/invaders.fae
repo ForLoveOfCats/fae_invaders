@@ -2,7 +2,6 @@ import faylib::Color, Vec2
 import sprite::Textures
 import entities::Entities, Player
 
-
 fn set_up_window(): Vec2 {
 	const WindowWidth = 2600
 	const WindowHeight = 2000
