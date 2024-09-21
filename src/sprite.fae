@@ -24,6 +24,9 @@ fn free() {
 	import faylib::unload_texture
 
 	unload_texture(self.player)
+	unload_texture(self.missile)
+	unload_texture(self.enemy)
+	unload_texture(self.bomb)
 }
 
 struct Sprite {
