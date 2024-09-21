@@ -4,323 +4,187 @@ import faylib::Vec2
 import sprite::Sprite, Textures
 
 const SlabSize = 10
+const MaxGeneration = 4294967295 // u32 max
 
 // TODO: Make fields internal once language has traits
 generic T
 struct EntityList {
-	slabs: List<Slab<T>>
-	slab_ids: List<SlabId>
-
-	next_slab_id: i64
-
-	// Number of slabs at the beginning of the
-	// slab list which are completely full
-	// <= live_length
-	full_length: isize
-
-	// Number of slabs at the beginning of the
-	// slab list which are non-empty
-	// >= full_length
-	live_length: isize
+	entities: List<T>
+	generations: List<u32>
+	free_ranges: List<Range>
+	generation: u32
 }
 
 method static EntityList
 fn new(): EntityList<T> {
-	assert(size_of<T>() > 0)
-
-	mut slabs = List<Slab<T>>.new()
-	let slab_id = SlabId { id: 0 }
-	slabs.push(Slab<T>.new(slab_id))
-
-	mut slab_ids = List<SlabId>.new()
-	slab_ids.push(slab_id)
-
 	return EntityList<T> {
-		slabs
-		slab_ids
-		next_slab_id: 1
-		full_length: 0
-		live_length: 1
+		entities: List<T>.new()
+		generations: List<u32>.new()
+		free_ranges: List<Range>.new()
+		generation: 0
 	}
 }
 
 method mut EntityList
 fn free() {
-	for slab of self.slabs.items => slab.free()
-	self.slabs.free()
-	self.slab_ids.free()
+	self.entities.free()
+	self.generations.free()
+	self.free_ranges.free()
 }
 
 method mut EntityList
-fn make_next_slab_id(): SlabId {
-	let id = self.next_slab_id
-	self.next_slab_id += 1
-	return SlabId { id }
-}
+fn push(entity: T): EntityHandle<T> {
+	if self.free_ranges.is_empty() {
+		let index = self.entities.length()
 
-method mut EntityList
-fn iterator(): EntityIterator<T> {
-	return EntityIterator<T> {
-		list: self
-		slab_id: self.slab_ids.first().unwrap()
-		slab_index: 0
-		entity_index: 0
-	}
-}
+		self.entities.push(entity)
+		self.generations.push(self.generation)
 
-method mut EntityList
-fn push(entity: T): EntityLocator<T> {
-	assert(self.full_length <= self.live_length)
-	assert(self.slabs.items.length == self.slab_ids.items.length)
-
-	// Push to the first live but not full slab if possible
-	if self.full_length < self.live_length {
-		let slab = self.slabs.get_mut(self.full_length)
-		let locator = slab.push(entity)
-		// If this makes the slab full, include it in the full count
-		if slab.is_full() => self.full_length += 1
-		return locator
-	}
-
-	// Else push to the first empty slab if possible
-	if self.live_length < self.slabs.items.length {
-		let slab = self.slabs.get_mut(self.live_length)
-		let locator = slab.push(entity)
-		assertf(
-			slab.is_not_full()
-			f"entity_count: {slab.entity_count}, SlabId: {slab.slab_id.id}"
-		) // Sanity check that capacity > 1
-		self.live_length += 1
-		return locator
-	}
-
-	// Otherwise we know all slabs are full
-	let slab_id = self.make_next_slab_id()
-	mut slab = Slab<T>.new(slab_id)
-	let locator = slab.push(entity)
-	assert(slab.is_not_full()) // Sanity check that capacity > 1
-
-	self.slabs.push(slab)
-	self.slab_ids.push(slab_id)
-	self.live_length += 1
-
-	return locator
-}
-
-method mut EntityList
-fn remove(locator: EntityLocator<T>) {
-	println(f"removing from SlabId {locator.slab_id.id}")
-	for slab_id, slab_index in self.slab_ids.items {
-		if slab_id.id == locator.slab_id.id {
-			self.remove_entity_from_slab(locator, slab_index)
-			return
+		return EntityHandle<T> {
+			index: index.(u32)
+			generation: self.generation
 		}
 	}
 
-	panicf(f"Failed to find slab for slab id {locator.slab_id.id}")
-}
+	let range = self.free_ranges.items[0].&mut
+	let index = range.start
+	range.start += 1
+	if range.is_empty() => self.free_ranges.remove(0)
 
-method mut EntityList
-fn remove_entity_from_slab(locator: EntityLocator<T>, slab_index: isize) {
-	let slab = self.slabs.get_mut(slab_index)
-	slab.remove(locator.entity)
+	self.entities.items[index] = entity
+	assert(self.generations.items[index] > self.generation)
+	self.generations.items[index] = self.generation
 
-	if slab_index < self.full_length {
-		self.move_slab_from_full_into_non_full(slab_index)
-	} else if slab.is_empty() {
-		self.move_slab_from_non_full_into_empty(slab_index)
+	return EntityHandle<T> {
+		index: index.(u32)
+		generation: self.generation
 	}
 }
 
 method mut EntityList
-fn move_slab_from_full_into_non_full(slab_index: isize) {
-	// We know that this slab was is currently in the full section
+fn remove(handle: EntityHandle<T>) {
+	let entity_index = handle.index.(isize)
+	if self.generations.items[entity_index] >= self.generation => return
+	self.generations.items[entity_index] = MaxGeneration
 
-	let not_on_boundary = slab_index != self.full_length - 1
-	let full_section_has_other = self.full_length > 2
+	// Find free range with this index on the boundary
+	//     If found, expand
+	//     Merge with surrounding if necessary
+	//
+	// Otherwise insert new free range at approprate location
 
-	// If there is a slab on the boundary which is not us, then swap
-	if full_section_has_other and not_on_boundary {
-		let itself = self.slabs.get_mut(slab_index)
-		let on_boundary = self.slabs.get_mut(self.full_length - 1)
-		fae::memory::swap<Slab<T>>(itself, on_boundary)
+	let ranges = self.free_ranges.items
 
-		let itself = self.slab_ids.get_mut(slab_index)
-		let on_boundary = self.slab_ids.get_mut(self.full_length - 1)
-		fae::memory::swap<SlabId>(itself, on_boundary)
+	mut left_edge: isize = 0
+	mut right_edge = ranges.length
+	mut middle: isize = 0
+
+	mut has_left = false
+	mut has_right = false
+
+	mut after_or_on_left = false
+	mut before_or_on_right = false
+
+	while left_edge <= right_edge {
+		middle = (left_edge + right_edge) / 2
+
+		has_left = middle - 1 >= 0
+		after_or_on_left = has_left.! or ranges[middle - 1].end <= entity_index
+
+		has_right = middle < ranges.length
+		before_or_on_right = has_right.! or entity_index <= ranges[middle].start - 1
+
+		if after_or_on_left and before_or_on_right => break
+
+		let range = ranges[middle]
+		if range.end <= entity_index => left_edge = middle + 1
+		else if range.start > entity_index => right_edge = middle - 1
+		else {
+			assert(range.contains(entity_index))
+			// Somehow we found an existing range which contains the index
+			// This should *never* happen and indicates a logic error
+			panicf("Removed entity already a free range")
+		}
 	}
 
-	// If we are on the boundary or there are no other slabs
-	// in the full section we need not swap anything
-	// There being no other slabs in the full section implies
-	// that we are on the boundary anyway
+	let left_index = middle - 1
+	let right_index = middle
 
-	self.full_length -= 1
-}
+	if has_left and ranges[left_index].end == entity_index {
+		// We are on the right edge of the range to the left of us
+		// Include us in the range
+		ranges[left_index].end += 1
 
-method mut EntityList
-fn move_slab_from_non_full_into_empty(slab_index: isize) {
-	// We know that this slab must have been in the live
-	// but not full section because of the asserts that
-	// slabs must be able to contain more than one entity
-
-	let not_on_boundary = slab_index != self.live_length - 1
-	let non_empty_section_has_other = self.live_length - self.full_length > 2
-
-	// If there is a slab on the boundary which is not us, then swap
-	if non_empty_section_has_other and not_on_boundary {
-		let itself = self.slabs.get_mut(slab_index)
-		let on_boundary = self.slabs.get_mut(self.live_length - 1)
-		fae::memory::swap<Slab<T>>(itself, on_boundary)
-
-		let itself = self.slab_ids.get_mut(slab_index)
-		let on_boundary = self.slab_ids.get_mut(self.live_length - 1)
-		fae::memory::swap<SlabId>(itself, on_boundary)
-	}
-
-	// If we are on the boundary or there are no other slabs
-	// in the non-empty section we need not swap anything
-	// There being no other slabs in the non-empty section
-	// implies that we are on the boundary anyway
-
-	self.live_length -= 1
-}
-
-generic T
-struct EntityLocator {
-	slab_id: SlabId readonly
-	entity: &mut T readonly
-}
-
-struct SlabId {
-	id: i64 readonly
-}
-
-// TODO: Make fields internal once language has traits
-generic T
-struct Slab {
-	slab_id: SlabId readonly
-
-	slice: []mut T readonly
-	presence: []mut bool readonly
-
-	entity_count: isize
-	first_absence: isize
-}
-
-method static Slab
-fn new(slab_id: SlabId): Slab<T> {
-	import fae::memory::allocate_slice_space, set_slice_bytes
-
-	let presence = allocate_slice_space<bool>(SlabSize)
-	set_slice_bytes<bool>(presence, 0)
-
-	return Slab<T> {
-		slab_id
-		slice: allocate_slice_space<T>(SlabSize)
-		presence
-		entity_count: 0
-		first_absence: 0
-	}
-}
-
-method mut Slab
-fn free() {
-	import fae::memory::free_slice
-	free_slice<T>(self.slice)
-	free_slice<bool>(self.presence)
-}
-
-method Slab
-fn is_full(): bool {
-	return self.entity_count >= SlabSize
-}
-
-method Slab
-fn is_not_full(): bool {
-	return self.entity_count < SlabSize
-}
-
-method Slab
-fn is_empty(): bool {
-	return self.entity_count == 0
-}
-
-method Slab
-fn is_not_empty(): bool {
-	return self.entity_count > 0
-}
-
-method mut Slab
-fn push(entity: T): EntityLocator<T> {
-	assert(self.first_absence < SlabSize)
-	let entity_pointer = self.slice[self.first_absence].&mut
-	entity_pointer.* = entity
-	self.presence[self.first_absence] = true
-
-	self.entity_count += 1
-	self.first_absence += 1
-
-	while self.first_absence < SlabSize {
-		if self.presence[self.first_absence].! => break
-		self.first_absence += 1
-	}
-
-	return EntityLocator<T> {
-		slab_id: self.slab_id
-		entity: entity_pointer
-	}
-}
-
-method mut Slab
-fn remove(entity: &T) {
-	let slice_start = self.slice.pointer.(isize)
-	let entity_offset = entity.(isize) - slice_start
-	let entity_index = entity_offset / size_of<T>()
-
-	assertf(0 <= entity_index and entity_index < SlabSize, f"{entity_index}")
-	if self.presence[entity_index] => self.entity_count -= 1
-	self.presence[entity_index] = false
-
-	if entity_index < self.first_absence {
-		self.first_absence = entity_index
-	}
-}
-
-// TODO: This is less than ideal, replace once languge has traits
-generic T
-struct EntityIterator {
-	list: &mut EntityList<T>
-	slab_id: SlabId
-	slab_index: isize
-	entity_index: isize
-}
-
-// I really *really* dislike having to write iteration like this
-method mut EntityIterator
-fn next(): Option<&mut T> {
-	if self.slab_index >= self.list.slabs.length() => return .None
-
-	while true {
-		if self.entity_index >= SlabSize {
-			self.slab_index += 1
-			self.entity_index = 0
-
-			if self.slab_index < self.list.slabs.length() {
-				let slab = self.list.slabs.get_ref(self.slab_index)
-				self.slab_id = slab.slab_id
-			}
-			else => return .None
+		// If there is a range to the right and it butts up against
+		// our range then combine them
+		if has_right and ranges[left_index].end == ranges[right_index].start {
+			ranges[left_index].end = ranges[right_index].end
+			self.free_ranges.remove(right_index)
 		}
 
-		let slab = self.list.slabs.get_ref(self.slab_index)
-		if slab.presence[self.entity_index].! => self.entity_index += 1
-		else => break
+		return
 	}
 
-	let slab = self.list.slabs.get_mut(self.slab_index)
-	defer self.entity_index += 1
-	return .Some(slab.slice[self.entity_index].&mut)
+	if has_right and entity_index + 1 == ranges[right_index].start {
+		// We are on the left edge of the range to the right of us
+		// Include us in the range
+		ranges[right_index].start -= 1
+
+		// If there is a range to the left and it butts up against
+		// our range then combine them
+		if has_left and ranges[left_index].end == ranges[right_index].start {
+			ranges[left_index].end = ranges[right_index].end
+			self.free_ranges.remove(right_index)
+		}
+
+		return
+	}
+
+	// We must not be on an existing range boundary
+	// Insert a new free range at the current range index
+	let range = entity_index..entity_index + 1
+	self.free_ranges.insert(range, middle)
+}
+
+method EntityList
+fn assert_free_ranges_actually_free() {
+	for range in self.free_ranges.items {
+		for entity_index in range {
+			assert(self.generations.get(entity_index) > self.generation)
+		}
+	}
+}
+
+method EntityList
+fn dump_debugging() {
+	println(f"Overall capacity: {self.entities.length()}")
+
+	for range, _, is_last in self.free_ranges.items {
+		print(f"{range.start}..{range.end} (capacity: {range.length()})")
+		if is_last.! => print(", ")
+	}
+
+	println("")
+	println("")
+
+	for range in self.free_ranges.items {
+		if range.length() == 1 {
+			print("o")
+			continue
+		}
+
+		print("<")
+		for _, _, is_last in range.start + 1..range.end {
+			if is_last => print(">")
+			else => print("-")
+		}
+	}
+}
+
+generic T
+struct EntityHandle {
+	index: u32
+	generation: u32
 }
 
 struct Entities {
@@ -346,46 +210,56 @@ struct Context {
 	textures: &Textures
 	entities: &mut Entities
 	delta: f32
-	entity_locator: EntityLocator<T>
+	handle: EntityHandle<T>
 }
 
 method mut Entities
 fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 	// Newly added entities are not ticked until the following frame
 
-	mut iterator: EntityIterator<Player> = self.player.iterator()
-	while iterator.next() is entity: Some {
+	self.player.generation += 1
+	for entity, index of self.player.entities.items {
+		let generation = self.player.generations.get(index)
+		if generation >= self.player.generation => continue
+
 		mut context = Context<Player> {
 			window_size
 			textures
 			entities: self
 			delta
-			entity_locator: EntityLocator<Player> {
-				slab_id: iterator.slab_id
-				entity
+			handle: EntityHandle<Player> {
+				index: index.(u32),
+				generation
 			}
 		}
 
 		entity.tick(context.&mut)
 	}
 
-	mut iterator: EntityIterator<Missile> = self.missile.iterator()
-	while iterator.next() is entity: Some {
+
+	self.missile.generation += 1
+	for entity, index of self.missile.entities.items {
+		let generation = self.missile.generations.get(index)
+		if generation >= self.missile.generation => continue
+
 		mut context = Context<Missile> {
 			window_size
 			textures
 			entities: self
 			delta
-			entity_locator: EntityLocator<Missile> {
-				slab_id: iterator.slab_id
-				entity
+			handle: EntityHandle<Missile> {
+				index: index.(u32),
+				generation
 			}
 		}
 
 		entity.tick(context.&mut)
+		// self.missile.assert_free_ranges_actually_free()
 	}
 
-	// for slab, _, is_last of self.missile.slabs
+	// self.missile.assert_free_ranges_actually_free()
+	// fae::io::terminal::clear()
+	// self.missile.dump_debugging()
 }
 
 method mut Entities
@@ -420,7 +294,7 @@ fn tick(context: &mut Context<Player>) {
 	import faylib::is_key_down
 
 	const Speed = 1500 // Pixels per second
-	const FireDelay = 0 // Seconds
+	const FireDelay = 0.3 // Seconds
 
 	mut distance = Vec2.zero()
 	if is_key_down(key::A) => distance.x -= Speed * context.delta
@@ -457,13 +331,13 @@ fn fire(textures: &Textures, entities: &mut Entities, position: Vec2) {
 
 method mut Missile
 fn tick(context: &mut Context<Missile>) {
-	const Speed = 1000 // Pixels per second
+	const Speed = 1300 // Pixels per second
 
 	let speed = Speed * context.delta
 	let distance = Vec2 { x: 0, y: -speed }
 	let reached = self.sprite.move(context.window_size, distance)
 
-	if reached.top => context.entities.missile.remove(context.entity_locator)
+	if reached.top => context.entities.missile.remove(context.handle)
 	else => self.sprite.draw()
 }
 
