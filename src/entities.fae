@@ -10,16 +10,26 @@ const MaxGeneration = 4294967295 // u32 max
 generic T
 struct EntityList {
 	entities: List<T>
-	generations: List<u32>
+	generations: List<GenerationInfo>
 	free_ranges: List<Range>
 	generation: u32
+}
+
+struct GenerationInfo {
+	added: u32
+	removed: u32
+}
+
+method GenerationInfo
+fn may_be_ticked(current_generation: u32): bool {
+	return current_generation < self.removed and self.added < current_generation
 }
 
 method static EntityList
 fn new(): EntityList<T> {
 	return EntityList<T> {
 		entities: List<T>.new()
-		generations: List<u32>.new()
+		generations: List<GenerationInfo>.new()
 		free_ranges: List<Range>.new()
 		generation: 0
 	}
@@ -38,7 +48,10 @@ fn push(entity: T): EntityHandle<T> {
 		let index = self.entities.length()
 
 		self.entities.push(entity)
-		self.generations.push(self.generation)
+		self.generations.push(GenerationInfo {
+			added: self.generation
+			removed: MaxGeneration
+		})
 
 		return EntityHandle<T> {
 			index: index.(u32)
@@ -52,8 +65,12 @@ fn push(entity: T): EntityHandle<T> {
 	if range.is_empty() => self.free_ranges.remove(0)
 
 	self.entities.items[index] = entity
-	assert(self.generations.items[index] > self.generation)
-	self.generations.items[index] = self.generation
+	let info = self.generations.items[index].&mut
+	assert(info.removed <= self.generation and info.added == MaxGeneration)
+	info.* = GenerationInfo {
+		added: self.generation
+		removed: MaxGeneration
+	}
 
 	return EntityHandle<T> {
 		index: index.(u32)
@@ -64,8 +81,13 @@ fn push(entity: T): EntityHandle<T> {
 method mut EntityList
 fn remove(handle: EntityHandle<T>) {
 	let entity_index = handle.index.(isize)
-	if self.generations.items[entity_index] >= self.generation => return
-	self.generations.items[entity_index] = MaxGeneration
+
+	let info = self.generations.items[entity_index].&mut
+	if info.added != handle.generation or info.removed <= self.generation => return
+	info.* = GenerationInfo {
+		added: MaxGeneration
+		removed: self.generation
+	}
 
 	// Find free range with this index on the boundary
 	//     If found, expand
@@ -150,7 +172,8 @@ method EntityList
 fn assert_free_ranges_actually_free() {
 	for range in self.free_ranges.items {
 		for entity_index in range {
-			assert(self.generations.get(entity_index) > self.generation)
+			let info = self.generations.get(entity_index)
+			assert(info.may_be_ticked(self.generation).!)
 		}
 	}
 }
@@ -216,12 +239,13 @@ struct Context {
 method mut Entities
 fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 	// Newly added entities are not ticked until the following frame
+	// Removed entities are still ticked on the frame they are removed
 
 	self.player.generation += 1
-	for entity, index of self.player.entities.items {
-		let generation = self.player.generations.get(index)
-		if generation >= self.player.generation => continue
+	self.missile.generation += 1
 
+	for info, index in self.player.generations.items {
+		if info.may_be_ticked(self.player.generation).! => continue
 		mut context = Context<Player> {
 			window_size
 			textures
@@ -229,19 +253,15 @@ fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 			delta
 			handle: EntityHandle<Player> {
 				index: index.(u32),
-				generation
+				generation: info.added
 			}
 		}
 
-		entity.tick(context.&mut)
+		self.player.entities.items[index].tick(context.&mut)
 	}
 
-
-	self.missile.generation += 1
-	for entity, index of self.missile.entities.items {
-		let generation = self.missile.generations.get(index)
-		if generation >= self.missile.generation => continue
-
+	for info, index in self.missile.generations.items {
+		if info.may_be_ticked(self.missile.generation).! => continue
 		mut context = Context<Missile> {
 			window_size
 			textures
@@ -249,15 +269,13 @@ fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 			delta
 			handle: EntityHandle<Missile> {
 				index: index.(u32),
-				generation
+				generation: info.added
 			}
 		}
 
-		entity.tick(context.&mut)
-		// self.missile.assert_free_ranges_actually_free()
+		self.missile.entities.items[index].tick(context.&mut)
 	}
 
-	// self.missile.assert_free_ranges_actually_free()
 	// fae::io::terminal::clear()
 	// self.missile.dump_debugging()
 }
@@ -336,9 +354,9 @@ fn tick(context: &mut Context<Missile>) {
 	let speed = Speed * context.delta
 	let distance = Vec2 { x: 0, y: -speed }
 	let reached = self.sprite.move(context.window_size, distance)
-
 	if reached.top => context.entities.missile.remove(context.handle)
-	else => self.sprite.draw()
+
+	self.sprite.draw()
 }
 
 // struct Enemy {}
