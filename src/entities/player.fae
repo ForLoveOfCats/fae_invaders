@@ -1,0 +1,49 @@
+import faylib::Vec2
+import sprite::Sprite, Textures
+import entity_system::EntitySystem, Context
+import entities::missile::Missile
+
+struct Player {
+	sprite: Sprite
+	fire_delay: f32
+}
+
+method static Player
+fn spawn(textures: &Textures, entity_system: &mut EntitySystem, window_size: Vec2) {
+	entity_system.player.push(Player {
+		sprite: Sprite {
+			texture: textures.player.&
+			position: Vec2 {
+				x: window_size.x / 2
+				y: window_size.y - textures.player.height.(f32)
+			}
+		}
+		fire_delay: 0
+	})
+}
+
+method mut Player
+fn tick(context: &mut Context<Player>) {
+	import faylib::is_key_down
+
+	const Speed = 1500 // Pixels per second
+	const FireDelay = 0.3 // Seconds
+
+	mut distance = Vec2.zero()
+	if is_key_down(key::A) => distance.x -= Speed * context.delta
+	if is_key_down(key::D) => distance.x += Speed * context.delta
+	self.sprite.move(context.window_size, distance)
+
+	self.fire_delay -= context.delta
+	if self.fire_delay <= 0 and is_key_down(key::W) {
+		let half_height = self.sprite.texture.height.(f32) / 2
+		let position = Vec2 {
+			x: self.sprite.position.x
+			y: self.sprite.position.y - half_height
+		}
+		Missile.fire(context.textures, context.entity_system, position)
+		self.fire_delay = FireDelay
+	}
+
+	self.sprite.draw()
+}

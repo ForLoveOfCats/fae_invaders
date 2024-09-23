@@ -1,7 +1,10 @@
 import fae::collections::list::List
 
 import faylib::Vec2
-import sprite::Sprite, Textures
+import sprite::Textures
+import entities::player::Player
+import entities::missile::Missile
+import entities::enemy::Enemy
 
 const SlabSize = 10
 const MaxGeneration = 4294967295 // u32 max
@@ -210,19 +213,19 @@ struct EntityHandle {
 	generation: u32
 }
 
-struct Entities {
+struct EntitySystem {
 	player: EntityList<Player>
 	missile: EntityList<Missile>
-	// enemy: EntityList<Enemy>
+	enemy: EntityList<Enemy>
 	// bomb: EntityList<Bomb>
 }
 
-method static Entities
-fn new(): Entities {
-	return Entities {
+method static EntitySystem
+fn new(): EntitySystem {
+	return EntitySystem {
 		player: EntityList<Player>.new()
 		missile: EntityList<Missile>.new()
-		// enemy: EntityList<Enemy>.new()
+		enemy: EntityList<Enemy>.new()
 		// bomb: EntityList<Bomb>.new()
 	}
 }
@@ -231,25 +234,26 @@ generic T
 struct Context {
 	window_size: Vec2
 	textures: &Textures
-	entities: &mut Entities
+	entity_system: &mut EntitySystem
 	delta: f32
 	handle: EntityHandle<T>
 }
 
-method mut Entities
+method mut EntitySystem
 fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 	// Newly added entities are not ticked until the following frame
 	// Removed entities are still ticked on the frame they are removed
 
 	self.player.generation += 1
 	self.missile.generation += 1
+	self.enemy.generation += 1
 
 	for info, index in self.player.generations.items {
 		if info.may_be_ticked(self.player.generation).! => continue
 		mut context = Context<Player> {
 			window_size
 			textures
-			entities: self
+			entity_system: self
 			delta
 			handle: EntityHandle<Player> {
 				index: index.(u32),
@@ -265,7 +269,7 @@ fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 		mut context = Context<Missile> {
 			window_size
 			textures
-			entities: self
+			entity_system: self
 			delta
 			handle: EntityHandle<Missile> {
 				index: index.(u32),
@@ -276,95 +280,30 @@ fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 		self.missile.entities.items[index].tick(context.&mut)
 	}
 
+	for info, index in self.enemy.generations.items {
+		if info.may_be_ticked(self.enemy.generation).! => continue
+		mut context = Context<Enemy> {
+			window_size
+			textures
+			entity_system: self
+			delta
+			handle: EntityHandle<Enemy> {
+				index: index.(u32),
+				generation: info.added
+			}
+		}
+
+		self.enemy.entities.items[index].tick(context.&mut)
+	}
+
 	// fae::io::terminal::clear()
 	// self.missile.dump_debugging()
 }
 
-method mut Entities
+method mut EntitySystem
 fn free() {
 	self.player.free()
 	self.missile.free()
-	// self.enemy.free()
+	self.enemy.free()
 	// self.bomb.free()
 }
-
-struct Player {
-	sprite: Sprite
-	fire_delay: f32
-}
-
-method static Player
-fn spawn(textures: &Textures, entities: &mut Entities, window_size: Vec2) {
-	entities.player.push(Player {
-		sprite: Sprite {
-			texture: textures.player.&
-			position: Vec2 {
-				x: window_size.x / 2
-				y: window_size.y - textures.player.height.(f32)
-			}
-		}
-		fire_delay: 0
-	})
-}
-
-method mut Player
-fn tick(context: &mut Context<Player>) {
-	import faylib::is_key_down
-
-	const Speed = 1500 // Pixels per second
-	const FireDelay = 0.3 // Seconds
-
-	mut distance = Vec2.zero()
-	if is_key_down(key::A) => distance.x -= Speed * context.delta
-	if is_key_down(key::D) => distance.x += Speed * context.delta
-	self.sprite.move(context.window_size, distance)
-
-	self.fire_delay -= context.delta
-	if self.fire_delay <= 0 and is_key_down(key::W) {
-		let half_height = self.sprite.texture.height.(f32) / 2
-		let position = Vec2 {
-			x: self.sprite.position.x
-			y: self.sprite.position.y - half_height
-		}
-		Missile.fire(context.textures, context.entities, position)
-		self.fire_delay = FireDelay
-	}
-
-	self.sprite.draw()
-}
-
-struct Missile {
-	sprite: Sprite
-}
-
-method static Missile
-fn fire(textures: &Textures, entities: &mut Entities, position: Vec2) {
-	entities.missile.push(Missile {
-		sprite: Sprite {
-			texture: textures.missile.&
-			position
-		}
-	})
-}
-
-method mut Missile
-fn tick(context: &mut Context<Missile>) {
-	const Speed = 1300 // Pixels per second
-
-	let speed = Speed * context.delta
-	let distance = Vec2 { x: 0, y: -speed }
-	let reached = self.sprite.move(context.window_size, distance)
-	if reached.top => context.entities.missile.remove(context.handle)
-
-	self.sprite.draw()
-}
-
-// struct Enemy {}
-
-// method mut Enemy
-// fn tick(_context: &Context<Enemy>) {}
-
-// struct Bomb {}
-
-// method mut Bomb
-// fn tick(_context: &Context<Bomb>) {}

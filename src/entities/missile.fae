@@ -1,0 +1,29 @@
+import faylib::Vec2
+import sprite::Sprite, Textures
+import entity_system::EntitySystem, Context
+
+struct Missile {
+	sprite: Sprite
+}
+
+method static Missile
+fn fire(textures: &Textures, entity_system: &mut EntitySystem, position: Vec2) {
+	entity_system.missile.push(Missile {
+		sprite: Sprite {
+			texture: textures.missile.&
+			position
+		}
+	})
+}
+
+method mut Missile
+fn tick(context: &mut Context<Missile>) {
+	const Speed = 1300 // Pixels per second
+
+	let speed = Speed * context.delta
+	let distance = Vec2 { x: 0, y: -speed }
+	let reached = self.sprite.move(context.window_size, distance)
+	if reached.top => context.entity_system.missile.remove(context.handle)
+
+	self.sprite.draw()
+}

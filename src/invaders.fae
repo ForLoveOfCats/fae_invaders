@@ -1,6 +1,8 @@
 import faylib::Color, Vec2
 import sprite::Textures
-import entities::Entities, Player
+import entity_system::EntitySystem
+import entities::player::Player
+import entities::enemy::Enemy
 
 fn set_up_window(): Vec2 {
 	const WindowWidth = 2600
@@ -23,10 +25,11 @@ fn main() {
 	let textures = Textures.load()
 	defer textures.free()
 
-	mut entities = Entities.new()
-	defer entities.free()
+	mut entity_system = EntitySystem.new()
+	defer entity_system.free()
 
-	Player.spawn(textures.&, entities.&mut, window_size)
+	Player.spawn(textures.&, entity_system.&mut, window_size)
+	Enemy.spawn(textures.&, entity_system.&mut, window_size)
 
 	while faylib::window_should_close().! {
 		faylib::begin_drawing()
@@ -34,6 +37,6 @@ fn main() {
 
 		faylib::clear_background(Color.white())
 
-		entities.tick(textures.&, window_size, faylib::get_frame_time())
+		entity_system.tick(textures.&, window_size, faylib::get_frame_time())
 	}
 }
