@@ -26,12 +26,12 @@ fn spawn(textures: &Textures, entity_system: &mut EntitySystem, window_size: Vec
 
 method mut Player
 fn tick(context: &mut Context<Player>) {
-	import faylib::is_key_down
+	import faylib::is_key_down, is_key_pressed
 
-	const TopSpeed = 1500 // Pixels per second
-	const Acceleration = TopSpeed * 7 // Pixels per second per second
+	const TopSpeed = 1350 // Pixels per second
+	const Acceleration = 6000 // Pixels per second per second
 	const Drag = 8000 // Pixels per second per second
-	const FireDelay = 0.3 // Seconds
+	const FireDelay = 0.15 // Seconds
 
 	let drag = Drag * context.delta
 	let acceleration = Acceleration * context.delta
@@ -49,7 +49,7 @@ fn tick(context: &mut Context<Player>) {
 	self.sprite.move(context.window_size, distance)
 
 	self.fire_delay -= context.delta
-	if self.fire_delay <= 0 and is_key_down(key::W) {
+	if self.fire_delay <= 0 and is_key_pressed(key::W) {
 		let half_height = self.sprite.texture.height.(f32) / 2
 		let position = Vec2 {
 			x: self.sprite.position.x

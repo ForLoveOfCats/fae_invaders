@@ -7,14 +7,11 @@ struct Enemy {
 }
 
 method static Enemy
-fn spawn(textures: &Textures, entity_system: &mut EntitySystem, window_size: Vec2) {
+fn spawn(textures: &Textures, entity_system: &mut EntitySystem, position: Vec2) {
 	entity_system.enemy.push(Enemy {
 		sprite: Sprite {
 			texture: textures.enemy.&
-			position: Vec2 {
-				x: window_size.x / 2
-				y: textures.enemy.height.(f32)
-			}
+			position
 		}
 	})
 }

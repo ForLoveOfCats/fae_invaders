@@ -9,7 +9,7 @@ fn set_up_window(): Vec2 {
 	const WindowHeight = 2000
 
 	faylib::set_trace_log_level(faylib::LogWarning)
-	faylib::init_window(WindowWidth, WindowHeight, "Fae Raylib".pointer)
+	faylib::init_window(WindowWidth, WindowHeight, "Fae Invaders".pointer)
 
 	let monitor = faylib::get_current_monitor()
 	let refresh_rate = faylib::get_monitor_refresh_rate(monitor)
@@ -29,7 +29,18 @@ fn main() {
 	defer entity_system.free()
 
 	Player.spawn(textures.&, entity_system.&mut, window_size)
-	Enemy.spawn(textures.&, entity_system.&mut, window_size)
+
+	for x_offset in -5..6 {
+		let x_offset = x_offset.(f32) * (textures.enemy.width.(f32) * 1.3)
+		for y_offset in 0..5 {
+			let y_offset = y_offset.(f32) * (textures.enemy.height.(f32) * 1.5)
+			let position = Vec2 {
+				x: window_size.x / 2 + x_offset
+				y: textures.enemy.height.(f32) + y_offset
+			}
+			Enemy.spawn(textures.&, entity_system.&mut, position)
+		}
+	}
 
 	while faylib::window_should_close().! {
 		faylib::begin_drawing()

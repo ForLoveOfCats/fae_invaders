@@ -1,4 +1,5 @@
 import faylib::Color, Vec2, Texture2D
+import rectangle::Rectangle
 
 struct Textures {
 	player: Texture2D
@@ -32,6 +33,33 @@ fn free() {
 struct Sprite {
 	texture: &Texture2D
 	position: Vec2
+}
+
+method Sprite
+fn overlaps(other: Sprite): bool {
+	let a = Rectangle {
+		upper_left: Vec2 {
+			x: self.position.x - self.texture.width.(f32) / 2
+			y: self.position.y - self.texture.height.(f32) / 2
+		}
+		lower_right: Vec2 {
+			x: self.position.x + self.texture.width.(f32) / 2
+			y: self.position.y + self.texture.height.(f32) / 2
+		}
+	}
+
+	let b = Rectangle {
+		upper_left: Vec2 {
+			x: other.position.x - other.texture.width.(f32) / 2
+			y: other.position.y - other.texture.height.(f32) / 2
+		}
+		lower_right: Vec2 {
+			x: other.position.x + other.texture.width.(f32) / 2
+			y: other.position.y + other.texture.height.(f32) / 2
+		}
+	}
+
+	return a.overlaps(b)
 }
 
 struct ReachedEdge {

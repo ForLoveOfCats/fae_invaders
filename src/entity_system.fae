@@ -235,6 +235,7 @@ struct Context {
 	window_size: Vec2
 	textures: &Textures
 	entity_system: &mut EntitySystem
+	generation: u32
 	delta: f32
 	handle: EntityHandle<T>
 }
@@ -254,6 +255,7 @@ fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 			window_size
 			textures
 			entity_system: self
+			generation: self.player.generation
 			delta
 			handle: EntityHandle<Player> {
 				index: index.(u32),
@@ -270,6 +272,7 @@ fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 			window_size
 			textures
 			entity_system: self
+			generation: self.missile.generation
 			delta
 			handle: EntityHandle<Missile> {
 				index: index.(u32),
@@ -286,6 +289,7 @@ fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 			window_size
 			textures
 			entity_system: self
+			generation: self.enemy.generation
 			delta
 			handle: EntityHandle<Enemy> {
 				index: index.(u32),
