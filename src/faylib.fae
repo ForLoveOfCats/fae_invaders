@@ -26,6 +26,9 @@ fn window_should_close(): bool
 extern "GetCurrentMonitor"
 fn get_current_monitor(): Monitor
 
+extern "GetFontDefault"
+fn get_default_font(): Font
+
 extern "GetMonitorRefreshRate"
 fn get_monitor_refresh_rate(monitor: Monitor): i32
 
@@ -93,7 +96,10 @@ extern "DrawTextureV"
 fn draw_texture(texture: Texture2D, position: Vec2, tint: Color)
 
 extern "DrawTexturePro"
-fn draw_texture_pro(texture: Texture2D, source: Rectange, destination: Rectange, origin: Vec2, rotation: f32, tint: Color)
+fn draw_texture_pro(texture: Texture2D, source: Rectangle, destination: Rectangle, origin: Vec2, rotation: f32, tint: Color)
+
+extern "DrawTextEx"
+fn draw_text(font: Font, text: &u8, position: Vec2, font_size: f32, spacing: f32, tint: Color)
 
 extern "IsKeyDown"
 fn is_key_down(key: i32): bool
@@ -103,6 +109,23 @@ fn is_key_pressed(key: i32): bool
 
 struct Monitor {
 	id: i32
+}
+
+struct Font {
+	base_size: i32
+	glyph_count: i32
+	glyph_padding: i32
+	texture: Texture2D
+	rectangles: &mut Rectangle
+	glyphs: &mut GlyphInfo
+}
+
+struct GlyphInfo {
+	value: i32
+	offset_x: i32
+	offset_y: i32
+	advance_x: i32
+	image: Image
 }
 
 struct Color {
@@ -137,7 +160,7 @@ fn zero(): Vec2 {
 	return Vec2 { x: 0, y: 0 }
 }
 
-struct Rectange {
+struct Rectangle {
 	x: f32
 	y: f32
 	width: f32

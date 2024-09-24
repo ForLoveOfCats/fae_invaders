@@ -1,0 +1,70 @@
+import faylib::Font, Vec2
+import entity_system::EntitySystem
+import sprite::Textures
+
+// This really wants a function pointer
+// However Fae doesn't have those yet, so here this is
+enum Scene {
+	Starting
+	InGame
+	Lost
+	Won
+}
+
+method mut Scene
+fn tick(context: &mut Context) {
+	match self {
+		Starting => scene_starting(context)
+		InGame => scene_in_game(context)
+		Lost => scene_lost(context)
+		Won => scene_won(context)
+	}
+
+	context.entity_system.tick(context)
+}
+
+struct Context {
+	textures: &Textures
+	entity_system: &mut EntitySystem
+	font: Font
+	scene: &mut Scene
+	viewport_size: Vec2
+	delta: f32
+}
+
+method mut Context
+fn transition(to: Scene) {
+	self.entity_system.clear()
+	self.scene.* = to
+}
+
+fn scene_starting(context: &mut Context) {
+	import entities::player::Player
+	import entities::enemy::Enemy
+
+	context.transition(.InGame)
+
+	for x_offset in -5..6 {
+		let x_offset = x_offset.(f32) * context.textures.enemy.width.(f32) * 1.4
+		for y_offset in 0..4 {
+			let y_offset = y_offset.(f32) * context.textures.enemy.height.(f32) * 1.6
+			let position = Vec2 {
+				x: context.viewport_size.x / 2 + x_offset
+				y: context.textures.enemy.height.(f32) + y_offset
+			}
+			Enemy.spawn(context.textures, context.entity_system, position)
+		}
+	}
+	
+	Player.spawn(context.textures, context.entity_system, context.viewport_size)
+}
+
+fn scene_in_game(context: &mut Context) {
+	if context.entity_system.enemy.all_dead() {
+		context.transition(.Starting)
+	}
+}
+
+fn scene_lost(_context: &mut Context) {}
+
+fn scene_won(_context: &mut Context) {}

@@ -283,7 +283,7 @@ struct Context {
 }
 
 method mut EntitySystem
-fn tick(textures: &Textures, viewport_size: Vec2, delta: f32) {
+fn tick(scene_context: &mut scene::Context) {
 	// Newly added entities are not ticked until the following frame
 	// Removed entities are still ticked on the frame they are removed
 
@@ -294,11 +294,11 @@ fn tick(textures: &Textures, viewport_size: Vec2, delta: f32) {
 	for info, index in self.player.generations.items {
 		if info.may_be_ticked(self.player.generation).! => continue
 		mut context = Context<Player> {
-			viewport_size
-			textures
+			viewport_size: scene_context.viewport_size
+			textures: scene_context.textures
 			entity_system: self
 			generation: self.player.generation
-			delta
+			delta: scene_context.delta
 			handle: EntityHandle<Player> {
 				index: index.(u32),
 				generation: info.added
@@ -311,11 +311,11 @@ fn tick(textures: &Textures, viewport_size: Vec2, delta: f32) {
 	for info, index in self.missile.generations.items {
 		if info.may_be_ticked(self.missile.generation).! => continue
 		mut context = Context<Missile> {
-			viewport_size
-			textures
+			viewport_size: scene_context.viewport_size
+			textures: scene_context.textures
 			entity_system: self
 			generation: self.missile.generation
-			delta
+			delta: scene_context.delta
 			handle: EntityHandle<Missile> {
 				index: index.(u32),
 				generation: info.added
@@ -328,11 +328,11 @@ fn tick(textures: &Textures, viewport_size: Vec2, delta: f32) {
 	for info, index in self.enemy.generations.items {
 		if info.may_be_ticked(self.enemy.generation).! => continue
 		mut context = Context<Enemy> {
-			viewport_size
-			textures
+			viewport_size: scene_context.viewport_size
+			textures: scene_context.textures
 			entity_system: self
 			generation: self.enemy.generation
-			delta
+			delta: scene_context.delta
 			handle: EntityHandle<Enemy> {
 				index: index.(u32),
 				generation: info.added

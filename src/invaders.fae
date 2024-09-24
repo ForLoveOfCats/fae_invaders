@@ -1,13 +1,13 @@
 import faylib::Color, Vec2
 import sprite::Textures
 import entity_system::EntitySystem
-import entities::player::Player
-import entities::enemy::Enemy
+import scene::Scene, Context
 
 const TargetWidth = 900
 const TargetHeight = 680
 
 fn main() {
+	faylib::set_trace_log_level(faylib::LogWarning)
 	let scale = set_up_window()
 	let viewport_size = Vec2 { x: TargetWidth, y: TargetHeight }
 
@@ -21,26 +21,33 @@ fn main() {
 	mut entity_system = EntitySystem.new()
 	defer entity_system.free()
 
+	mut scene: Scene = .Starting
+	mut context = Context {
+		textures: textures.&
+		entity_system: entity_system.&mut
+		font: faylib::get_default_font()
+		scene: scene.&mut
+		viewport_size
+		delta: 0
+	}
+
 	while faylib::window_should_close().! {
-		if entity_system.enemy.all_dead() {
-			start_round(textures.&, entity_system.&mut, viewport_size)
-		}
+		context.delta = faylib::get_frame_time()
 
 		faylib::begin_drawing()
 		defer faylib::end_drawing()
 
 		faylib::begin_texture_mode(render_texture)
 		faylib::clear_background(Color.white())
-		entity_system.tick(textures.&, viewport_size, faylib::get_frame_time())
+		scene.tick(context.&mut)
 		faylib::end_texture_mode()
 
 		let target_width = render_texture.texture.width.(f32)
 		let target_height = render_texture.texture.height.(f32)
-
 		faylib::draw_texture_pro(
 			render_texture.texture
-			faylib::Rectange { x: 0, y: 0, width: target_width, height: -target_height }
-			faylib::Rectange { x: 0, y: 0, width: target_width * scale, height: target_height * scale }
+			faylib::Rectangle { x: 0, y: 0, width: target_width, height: -target_height }
+			faylib::Rectangle { x: 0, y: 0, width: target_width * scale, height: target_height * scale }
 			Vec2.zero()
 			0
 			Color.white()
@@ -48,26 +55,7 @@ fn main() {
 	}
 }
 
-fn start_round(textures: &Textures, entity_system: &mut EntitySystem, viewport_size: Vec2) {
-	entity_system.clear()
-
-	Player.spawn(textures, entity_system, viewport_size)
-
-	for x_offset in -5..6 {
-		let x_offset = x_offset.(f32) * textures.enemy.width.(f32) * 1.4
-		for y_offset in 0..5 {
-			let y_offset = y_offset.(f32) * textures.enemy.height.(f32) * 1.6
-			let position = Vec2 {
-				x: viewport_size.x / 2 + x_offset
-				y: textures.enemy.height.(f32) + y_offset
-			}
-			Enemy.spawn(textures, entity_system, position)
-		}
-	}
-}
-
 fn set_up_window(): f32 {
-	faylib::set_trace_log_level(faylib::LogWarning)
 	faylib::init_window(TargetWidth, TargetHeight, "Fae Invaders".pointer)
 
 	let monitor = faylib::get_current_monitor()
