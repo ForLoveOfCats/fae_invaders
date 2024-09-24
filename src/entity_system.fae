@@ -16,6 +16,7 @@ struct EntityList {
 	generations: List<GenerationInfo>
 	free_ranges: List<Range>
 	generation: u32
+	live_count: u32
 }
 
 struct GenerationInfo {
@@ -35,7 +36,18 @@ fn new(): EntityList<T> {
 		generations: List<GenerationInfo>.new()
 		free_ranges: List<Range>.new()
 		generation: 0
+		live_count: 0
 	}
+}
+
+
+method mut EntityList
+fn clear() {
+	self.entities.clear()
+	self.generations.clear()
+	self.free_ranges.clear()
+	self.generation = 0
+	self.live_count = 0
 }
 
 method mut EntityList
@@ -47,6 +59,8 @@ fn free() {
 
 method mut EntityList
 fn push(entity: T): EntityHandle<T> {
+	self.live_count += 1
+
 	if self.free_ranges.is_empty() {
 		let index = self.entities.length()
 
@@ -87,6 +101,7 @@ fn remove(handle: EntityHandle<T>) {
 
 	let info = self.generations.items[entity_index].&mut
 	if info.added != handle.generation or info.removed <= self.generation => return
+	self.live_count -= 1
 	info.* = GenerationInfo {
 		added: MaxGeneration
 		removed: self.generation
@@ -172,6 +187,16 @@ fn remove(handle: EntityHandle<T>) {
 }
 
 method EntityList
+fn any_alive(): bool {
+	return self.live_count > 0
+}
+
+method EntityList
+fn all_dead(): bool {
+	return self.live_count <= 0
+}
+
+method EntityList
 fn assert_free_ranges_actually_free() {
 	for range in self.free_ranges.items {
 		for entity_index in range {
@@ -228,6 +253,23 @@ fn new(): EntitySystem {
 		enemy: EntityList<Enemy>.new()
 		// bomb: EntityList<Bomb>.new()
 	}
+}
+
+method mut EntitySystem
+fn clear() {
+	self.player.clear()
+	self.missile.clear()
+	self.enemy.clear()
+	// self.bomb.clear()
+}
+
+
+method mut EntitySystem
+fn free() {
+	self.player.free()
+	self.missile.free()
+	self.enemy.free()
+	// self.bomb.free()
 }
 
 generic T
@@ -302,12 +344,4 @@ fn tick(textures: &Textures, viewport_size: Vec2, delta: f32) {
 
 	// fae::io::terminal::clear()
 	// self.missile.dump_debugging()
-}
-
-method mut EntitySystem
-fn free() {
-	self.player.free()
-	self.missile.free()
-	self.enemy.free()
-	// self.bomb.free()
 }

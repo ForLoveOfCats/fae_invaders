@@ -21,21 +21,11 @@ fn main() {
 	mut entity_system = EntitySystem.new()
 	defer entity_system.free()
 
-	Player.spawn(textures.&, entity_system.&mut, viewport_size)
-
-	for x_offset in -5..6 {
-		let x_offset = x_offset.(f32) * textures.enemy.width.(f32) * 1.4
-		for y_offset in 0..5 {
-			let y_offset = y_offset.(f32) * textures.enemy.height.(f32) * 1.6
-			let position = Vec2 {
-				x: viewport_size.x / 2 + x_offset
-				y: textures.enemy.height.(f32) + y_offset
-			}
-			Enemy.spawn(textures.&, entity_system.&mut, position)
-		}
-	}
-
 	while faylib::window_should_close().! {
+		if entity_system.enemy.all_dead() {
+			start_round(textures.&, entity_system.&mut, viewport_size)
+		}
+
 		faylib::begin_drawing()
 		defer faylib::end_drawing()
 
@@ -55,6 +45,24 @@ fn main() {
 			0
 			Color.white()
 		)
+	}
+}
+
+fn start_round(textures: &Textures, entity_system: &mut EntitySystem, viewport_size: Vec2) {
+	entity_system.clear()
+
+	Player.spawn(textures, entity_system, viewport_size)
+
+	for x_offset in -5..6 {
+		let x_offset = x_offset.(f32) * textures.enemy.width.(f32) * 1.4
+		for y_offset in 0..5 {
+			let y_offset = y_offset.(f32) * textures.enemy.height.(f32) * 1.6
+			let position = Vec2 {
+				x: viewport_size.x / 2 + x_offset
+				y: textures.enemy.height.(f32) + y_offset
+			}
+			Enemy.spawn(textures, entity_system, position)
+		}
 	}
 }
 
