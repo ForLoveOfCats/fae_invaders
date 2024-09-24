@@ -10,13 +10,13 @@ struct Player {
 }
 
 method static Player
-fn spawn(textures: &Textures, entity_system: &mut EntitySystem, window_size: Vec2) {
+fn spawn(textures: &Textures, entity_system: &mut EntitySystem, viewport_size: Vec2) {
 	entity_system.player.push(Player {
 		sprite: Sprite {
 			texture: textures.player.&
 			position: Vec2 {
-				x: window_size.x / 2
-				y: window_size.y - textures.player.height.(f32)
+				x: viewport_size.x / 2
+				y: viewport_size.y - textures.player.height.(f32)
 			}
 		}
 		velocity: Vec2.zero()
@@ -28,9 +28,9 @@ method mut Player
 fn tick(context: &mut Context<Player>) {
 	import faylib::is_key_down, is_key_pressed
 
-	const TopSpeed = 1350 // Pixels per second
-	const Acceleration = 6000 // Pixels per second per second
-	const Drag = 8000 // Pixels per second per second
+	const TopSpeed = 450 // Pixels per second
+	const Acceleration = 2000 // Pixels per second per second
+	const Drag = 2700 // Pixels per second per second
 	const FireDelay = 0.15 // Seconds
 
 	let drag = Drag * context.delta
@@ -46,7 +46,7 @@ fn tick(context: &mut Context<Player>) {
 	if self.velocity.x > TopSpeed => self.velocity.x = TopSpeed
 
 	let distance = Vec2 { x: self.velocity.x * context.delta, y: 0 }
-	self.sprite.move(context.window_size, distance)
+	self.sprite.move(context.viewport_size, distance)
 
 	self.fire_delay -= context.delta
 	if self.fire_delay <= 0 and is_key_pressed(key::W) {

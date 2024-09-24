@@ -4,23 +4,16 @@ import entity_system::EntitySystem
 import entities::player::Player
 import entities::enemy::Enemy
 
-fn set_up_window(): Vec2 {
-	const WindowWidth = 2600
-	const WindowHeight = 2000
-
-	faylib::set_trace_log_level(faylib::LogWarning)
-	faylib::init_window(WindowWidth, WindowHeight, "Fae Invaders".pointer)
-
-	let monitor = faylib::get_current_monitor()
-	let refresh_rate = faylib::get_monitor_refresh_rate(monitor)
-	faylib::set_target_fps(refresh_rate)
-	println(f"Set refresh rate of {refresh_rate}hz")
-
-	return Vec2 { x: WindowWidth, y: WindowHeight }
-}
+const TargetWidth = 900
+const TargetHeight = 680
 
 fn main() {
-	let window_size = set_up_window()
+	let scale = set_up_window()
+	let viewport_size = Vec2 { x: TargetWidth, y: TargetHeight }
+
+	let render_texture = faylib::load_render_texture(TargetWidth, TargetHeight)
+	defer faylib::unload_render_texture(render_texture)
+	faylib::set_texture_filter(render_texture.texture, faylib::TextureFilterPoint)
 
 	let textures = Textures.load()
 	defer textures.free()
@@ -28,14 +21,14 @@ fn main() {
 	mut entity_system = EntitySystem.new()
 	defer entity_system.free()
 
-	Player.spawn(textures.&, entity_system.&mut, window_size)
+	Player.spawn(textures.&, entity_system.&mut, viewport_size)
 
 	for x_offset in -5..6 {
-		let x_offset = x_offset.(f32) * (textures.enemy.width.(f32) * 1.3)
+		let x_offset = x_offset.(f32) * textures.enemy.width.(f32) * 1.4
 		for y_offset in 0..5 {
-			let y_offset = y_offset.(f32) * (textures.enemy.height.(f32) * 1.5)
+			let y_offset = y_offset.(f32) * textures.enemy.height.(f32) * 1.6
 			let position = Vec2 {
-				x: window_size.x / 2 + x_offset
+				x: viewport_size.x / 2 + x_offset
 				y: textures.enemy.height.(f32) + y_offset
 			}
 			Enemy.spawn(textures.&, entity_system.&mut, position)
@@ -46,8 +39,53 @@ fn main() {
 		faylib::begin_drawing()
 		defer faylib::end_drawing()
 
+		faylib::begin_texture_mode(render_texture)
 		faylib::clear_background(Color.white())
+		entity_system.tick(textures.&, viewport_size, faylib::get_frame_time())
+		faylib::end_texture_mode()
 
-		entity_system.tick(textures.&, window_size, faylib::get_frame_time())
+		let target_width = render_texture.texture.width.(f32)
+		let target_height = render_texture.texture.height.(f32)
+
+		faylib::draw_texture_pro(
+			render_texture.texture
+			faylib::Rectange { x: 0, y: 0, width: target_width, height: -target_height }
+			faylib::Rectange { x: 0, y: 0, width: target_width * scale, height: target_height * scale }
+			Vec2.zero()
+			0
+			Color.white()
+		)
 	}
+}
+
+fn set_up_window(): f32 {
+	faylib::set_trace_log_level(faylib::LogWarning)
+	faylib::init_window(TargetWidth, TargetHeight, "Fae Invaders".pointer)
+
+	let monitor = faylib::get_current_monitor()
+	let width = faylib::get_monitor_width(monitor)
+	let height = faylib::get_monitor_height(monitor)
+
+	let scale: i32 = if width > TargetWidth * 3 and height > TargetHeight * 3 {
+		yield 3
+	} else if width > TargetWidth * 2 and height > TargetHeight * 2 {
+		yield 2
+	} else {
+		yield 1
+	}
+	println(f"Chose a scale factor of {scale}")
+
+	faylib::set_window_size(TargetWidth * scale, TargetHeight * scale)
+	println(f"Set window size of {TargetWidth * scale}x{TargetHeight * scale}")
+
+	// This would not work on Wayland, good thing Raylib/GLFW still uses X11/Xwayland 😅
+	let x = width / 2 - TargetWidth * scale / 2
+	let y = height / 2 - TargetHeight * scale / 2
+	faylib::set_window_position(x, y)
+
+	let refresh_rate = faylib::get_monitor_refresh_rate(monitor)
+	faylib::set_target_fps(refresh_rate)
+	println(f"Set refresh rate of {refresh_rate}hz")
+
+	return scale.(f32)
 }

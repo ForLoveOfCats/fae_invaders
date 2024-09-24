@@ -70,7 +70,7 @@ struct ReachedEdge {
 }
 
 method mut Sprite
-fn move(window_size: Vec2, distance: Vec2): ReachedEdge {
+fn move(viewport_size: Vec2, distance: Vec2): ReachedEdge {
 	mut reached = ReachedEdge {
 		left: false
 		right: false
@@ -92,16 +92,16 @@ fn move(window_size: Vec2, distance: Vec2): ReachedEdge {
 	if left < 0 {
 		self.position.x = half_width
 		reached.left = true
-	} else if right > window_size.x {
-		self.position.x = window_size.x - half_width
+	} else if right > viewport_size.x {
+		self.position.x = viewport_size.x - half_width
 		reached.right = true
 	}
 
 	if top < 0 {
 		self.position.y = half_height
 		reached.top = true
-	} else if bottom > window_size.y {
-		self.position.y = window_size.y - half_height
+	} else if bottom > viewport_size.y {
+		self.position.y = viewport_size.y - half_height
 		reached.bottom = true
 	}
 
@@ -111,8 +111,8 @@ fn move(window_size: Vec2, distance: Vec2): ReachedEdge {
 method Sprite
 fn draw() {
 	let position = Vec2 {
-		x: self.position.x - self.texture.width.(f32) / 2
-		y: self.position.y - self.texture.height.(f32) / 2
+		x: (self.position.x - self.texture.width.(f32) / 2).(i32).(f32)
+		y: (self.position.y - self.texture.height.(f32) / 2).(i32).(f32)
 	}
 	faylib::draw_texture(self.texture.*, position, Color.white())
 }

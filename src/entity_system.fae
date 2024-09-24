@@ -232,7 +232,7 @@ fn new(): EntitySystem {
 
 generic T
 struct Context {
-	window_size: Vec2
+	viewport_size: Vec2
 	textures: &Textures
 	entity_system: &mut EntitySystem
 	generation: u32
@@ -241,7 +241,7 @@ struct Context {
 }
 
 method mut EntitySystem
-fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
+fn tick(textures: &Textures, viewport_size: Vec2, delta: f32) {
 	// Newly added entities are not ticked until the following frame
 	// Removed entities are still ticked on the frame they are removed
 
@@ -252,7 +252,7 @@ fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 	for info, index in self.player.generations.items {
 		if info.may_be_ticked(self.player.generation).! => continue
 		mut context = Context<Player> {
-			window_size
+			viewport_size
 			textures
 			entity_system: self
 			generation: self.player.generation
@@ -269,7 +269,7 @@ fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 	for info, index in self.missile.generations.items {
 		if info.may_be_ticked(self.missile.generation).! => continue
 		mut context = Context<Missile> {
-			window_size
+			viewport_size
 			textures
 			entity_system: self
 			generation: self.missile.generation
@@ -286,7 +286,7 @@ fn tick(textures: &Textures, window_size: Vec2, delta: f32) {
 	for info, index in self.enemy.generations.items {
 		if info.may_be_ticked(self.enemy.generation).! => continue
 		mut context = Context<Enemy> {
-			window_size
+			viewport_size
 			textures
 			entity_system: self
 			generation: self.enemy.generation

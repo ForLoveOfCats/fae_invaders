@@ -7,6 +7,13 @@ const LogError = 5
 const LogFatal = 6
 const LogNone = 7
 
+const TextureFilterPoint = 0
+const TextureFilterBilinear = 1
+const TextureFilterTrilinear = 2
+const TextureFilterAnisotropic4X = 3
+const TextureFilterAnisotropic8X = 4
+const TextureFilterAnisotropic16X = 5
+
 extern "InitWindow"
 fn init_window(width: i32, height: i32, title: &u8)
 
@@ -22,17 +29,38 @@ fn get_current_monitor(): Monitor
 extern "GetMonitorRefreshRate"
 fn get_monitor_refresh_rate(monitor: Monitor): i32
 
+extern "GetMonitorWidth"
+fn get_monitor_width(monitor: Monitor): i32
+
+extern "GetMonitorHeight"
+fn get_monitor_height(monitor: Monitor): i32
+
 extern "ClearBackground"
 fn clear_background(color: Color)
 
 extern "BeginDrawing"
 fn begin_drawing()
 
+extern "BeginTextureMode"
+fn begin_texture_mode(target: RenderTexture2D)
+
 extern "EndDrawing"
 fn end_drawing()
 
+extern "EndTextureMode"
+fn end_texture_mode()
+
 extern "SetTargetFPS"
 fn set_target_fps(fps: i32)
+
+extern "SetWindowSize"
+fn set_window_size(width: i32, height: i32)
+
+extern "SetWindowPosition"
+fn set_window_position(x: i32, y: i32)
+
+extern "SetTextureFilter"
+fn set_texture_filter(texture: Texture2D, filter: i32)
 
 extern "GetFrameTime"
 fn get_frame_time(): f32
@@ -46,17 +74,26 @@ fn draw_rectangle(position: Vec2, size: Vec2, color: Color)
 extern "LoadImage"
 fn load_image(path: &u8): Image
 
+extern "LoadRenderTexture"
+fn load_render_texture(width: i32, height: i32): RenderTexture2D
+
 extern "LoadTexture"
 fn load_texture(path: &u8): Texture2D
 
 extern "LoadTextureFromImage"
 fn load_texture_from_image(image: Image): Texture2D
 
+extern "UnloadRenderTexture"
+fn unload_render_texture(texture: RenderTexture2D)
+
 extern "UnloadTexture"
 fn unload_texture(texture: Texture2D)
 
 extern "DrawTextureV"
 fn draw_texture(texture: Texture2D, position: Vec2, tint: Color)
+
+extern "DrawTexturePro"
+fn draw_texture_pro(texture: Texture2D, source: Rectange, destination: Rectange, origin: Vec2, rotation: f32, tint: Color)
 
 extern "IsKeyDown"
 fn is_key_down(key: i32): bool
@@ -100,6 +137,13 @@ fn zero(): Vec2 {
 	return Vec2 { x: 0, y: 0 }
 }
 
+struct Rectange {
+	x: f32
+	y: f32
+	width: f32
+	height: f32
+}
+
 struct Image {
 	data: &mut u8
 	width: i32
@@ -114,4 +158,10 @@ struct Texture2D {
 	height: i32
 	mipmaps: i32
 	format: i32
+}
+
+struct RenderTexture2D {
+	id: u32
+	texture: Texture2D
+	depth: Texture2D
 }
