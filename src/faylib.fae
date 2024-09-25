@@ -71,8 +71,8 @@ fn get_frame_time(): f32
 extern "SetTraceLogLevel"
 fn set_trace_log_level(log_level: i32)
 
-extern "DrawRectangleV"
-fn draw_rectangle(position: Vec2, size: Vec2, color: Color)
+extern "DrawRectangleRec"
+fn draw_rectangle(rectangle: Rectangle, color: Color)
 
 extern "LoadImage"
 fn load_image(path: &u8): Image

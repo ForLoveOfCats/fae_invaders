@@ -2,6 +2,7 @@ import faylib::Color, Vec2
 import sprite::Textures
 import entity_system::EntitySystem
 import scene::Scene, Context
+import user_interface::UserInterface
 
 const TargetWidth = 900
 const TargetHeight = 680
@@ -21,15 +22,20 @@ fn main() {
 	mut entity_system = EntitySystem.new()
 	defer entity_system.free()
 
-	mut scene: Scene = .Starting
+	mut scene: Scene = .MainMenu { start: false }
+	mut user_interface = UserInterface.new()
+	defer user_interface.free()
 	mut context = Context {
 		textures: textures.&
 		entity_system: entity_system.&mut
+		user_interface: user_interface.&mut
 		font: faylib::get_default_font()
 		scene: scene.&mut
 		viewport_size
 		delta: 0
 	}
+
+	scene.transitioned(context.&mut)
 
 	while faylib::window_should_close().! {
 		context.delta = faylib::get_frame_time()

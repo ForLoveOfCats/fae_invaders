@@ -1,0 +1,126 @@
+import fae::collections::list::List
+
+import faylib::Rectangle, Color, Vec2, draw_rectangle
+
+const Height = 34
+const Width = 250
+const Padding = 10
+
+const SelectionInset = 12
+const SelectionWidth = Height - SelectionInset - SelectionInset
+const SelectionHeight = SelectionWidth
+
+enum Item {
+	Button {
+		text: str
+		pressed: &mut bool
+	}
+}
+
+method mut Item
+fn tick(scene_context: &mut scene::Context, rectangle: Rectangle, selected: bool) {
+	import faylib::draw_text, is_key_pressed
+
+	match self {
+		Button {
+			draw_rectangle(rectangle, Color.rgb(200, 200, 200))
+			draw_text(
+				scene_context.font
+				self.text.pointer
+				Vec2 {
+					x: rectangle.x + SelectionInset + SelectionWidth + SelectionInset
+					y: rectangle.y + 8
+				}
+				20
+				2
+				Color.rgb(0, 0, 0)
+			)
+			if selected and is_key_pressed(key::Enter) => self.pressed.* = true
+		}
+	}
+}
+
+struct UserInterface {
+	heading: str
+	items: List<Item>
+	selection: isize
+}
+
+method static UserInterface
+fn new(): UserInterface {
+	return UserInterface {
+		heading: ""
+		items: List<Item>.new()
+		selection: 0
+	}
+}
+
+method mut UserInterface
+fn free() {
+	self.items.free()
+}
+
+method mut UserInterface
+fn clear() {
+	self.heading = ""
+	self.items.clear()
+	self.selection = 0
+}
+
+method mut UserInterface
+fn push(item: Item) {
+	self.items.push(item)
+}
+
+method mut UserInterface
+fn tick(scene_context: &mut scene::Context) {
+	import faylib::is_key_pressed
+
+	if is_key_pressed(key::W) => self.selection -= 1
+	if is_key_pressed(key::S) => self.selection += 1
+
+	if self.selection >= self.items.length() {
+		self.selection = self.items.length() - 1
+	}
+	if self.selection < 0 => self.selection = 0
+
+	let items_height = Height * self.items.length().(f32)
+	let padding_height = Padding * (self.items.length().(f32) - 1)
+	let overall_height = items_height + padding_height
+
+	let center_y = scene_context.viewport_size.y / 2
+	let top = center_y - overall_height / 2
+
+	let center_x = scene_context.viewport_size.x / 2
+	let x = center_x - Width / 2
+
+	if self.heading.length > 0 {
+		faylib::draw_text(
+			scene_context.font
+			self.heading.pointer
+			Vec2 { x: x + 5, y: top - Padding - 24 }
+			30
+			2
+			Color.rgb(0, 0, 0)
+		)
+	}
+
+	mut y = top
+	for item, index of self.items.items {
+		let rectangle = Rectangle { x, y, width: Width, height: Height }
+		let selected = self.selection == index
+		item.tick(scene_context, rectangle, selected)
+
+		if selected {
+			let rectangle = Rectangle {
+				x: x + SelectionInset
+				y: y + SelectionInset
+				width: SelectionWidth
+				height: SelectionHeight
+			}
+			draw_rectangle(rectangle, Color.rgb(200, 100, 100))
+		}
+
+		y += Height + Padding
+	}
+}
