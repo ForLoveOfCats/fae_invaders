@@ -6,6 +6,7 @@ import user_interface::UserInterface
 
 const TargetWidth = 900
 const TargetHeight = 680
+const MinFrameRate = 60
 
 fn main() {
 	faylib::set_trace_log_level(faylib::LogWarning)
@@ -85,7 +86,8 @@ fn set_up_window(): f32 {
 	let y = height / 2 - TargetHeight * scale / 2
 	faylib::set_window_position(x, y)
 
-	let refresh_rate = faylib::get_monitor_refresh_rate(monitor)
+	mut refresh_rate = faylib::get_monitor_refresh_rate(monitor)
+	if refresh_rate < MinFrameRate => refresh_rate = MinFrameRate
 	faylib::set_target_fps(refresh_rate)
 	println(f"Set refresh rate of {refresh_rate}hz")
 
