@@ -28,10 +28,10 @@ method mut Player
 fn tick(context: &mut Context<Player>) {
 	import faylib::is_key_down, is_key_pressed
 
-	const TopSpeed = 450 // Pixels per second
-	const Acceleration = 2000 // Pixels per second per second
-	const Drag = 2700 // Pixels per second per second
-	const FireDelay = 0.15 // Seconds
+	const TopSpeed = 750 // Pixels per second
+	const Acceleration = 1100 // Pixels per second per second
+	const Drag = 2800 // Pixels per second per second
+	const FireDelay = 0.13 // Seconds
 
 	let drag = Drag * context.delta
 	let acceleration = Acceleration * context.delta
@@ -51,8 +51,9 @@ fn tick(context: &mut Context<Player>) {
 	self.fire_delay -= context.delta
 	if self.fire_delay <= 0 and is_key_pressed(key::W) {
 		let half_height = self.sprite.texture.height.(f32) / 2
+		let random = faylib::get_random_value(-10, 10).(f32)
 		let position = Vec2 {
-			x: self.sprite.position.x
+			x: self.sprite.position.x + random
 			y: self.sprite.position.y - half_height
 		}
 		Missile.fire(context.textures, context.entity_system, position)

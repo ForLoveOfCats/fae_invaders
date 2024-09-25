@@ -71,6 +71,12 @@ fn get_frame_time(): f32
 extern "SetTraceLogLevel"
 fn set_trace_log_level(log_level: i32)
 
+extern "SetRandomSeed"
+fn set_random_seed(seed: u32)
+
+extern "GetRandomValue"
+fn get_random_value(min: i32, max: i32): i32
+
 extern "DrawRectangleRec"
 fn draw_rectangle(rectangle: Rectangle, color: Color)
 

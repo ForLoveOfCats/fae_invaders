@@ -13,7 +13,7 @@ enum Scene {
 		three: bool
 	}
 	InGame { difficulty: isize }
-	Lost
+	Lost { reason: str, ok: bool }
 	Won { ok: bool }
 }
 
@@ -124,14 +124,25 @@ fn scene_transitioned_in_game(context: &mut Context, scene: &mut Scene::InGame) 
 }
 
 fn scene_in_game(context: &mut Context, _scene: &mut Scene::InGame) {
-	if context.entity_system.enemy.all_dead() {
+	if context.entity_system.player.all_dead() {
+		let reason = "You Died!"
+		context.transition(.Lost { reason, ok: false })
+	} else if context.entity_system.enemy.all_dead() {
 		context.transition(.Won { ok: false })
 	}
 }
 
-fn scene_transitioned_lost(_context: &mut Context, _scene: &mut Scene::Lost) {}
+fn scene_transitioned_lost(context: &mut Context, scene: &mut Scene::Lost) {
+	context.user_interface.heading = scene.reason
+	context.user_interface.push(.Button {
+		text: "Continue"
+		pressed: scene.ok.&mut
+	})
+}
 
-fn scene_lost(_context: &mut Context, _scene: &mut Scene::Lost) {}
+fn scene_lost(context: &mut Context, scene: &mut Scene::Lost) {
+	if scene.ok => context.transition(.MainMenu { start: false })
+}
 
 fn scene_transitioned_won(context: &mut Context, scene: &mut Scene::Won) {
 	context.user_interface.heading = "You Won!"

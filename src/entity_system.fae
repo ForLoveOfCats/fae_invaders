@@ -5,6 +5,7 @@ import sprite::Textures
 import entities::player::Player
 import entities::missile::Missile
 import entities::enemy::Enemy
+import entities::bomb::Bomb
 
 const SlabSize = 10
 const MaxGeneration = 4294967295 // u32 max
@@ -241,8 +242,8 @@ struct EntityHandle {
 struct EntitySystem {
 	player: EntityList<Player>
 	missile: EntityList<Missile>
+	bomb: EntityList<Bomb>
 	enemy: EntityList<Enemy>
-	// bomb: EntityList<Bomb>
 }
 
 method static EntitySystem
@@ -250,8 +251,8 @@ fn new(): EntitySystem {
 	return EntitySystem {
 		player: EntityList<Player>.new()
 		missile: EntityList<Missile>.new()
+		bomb: EntityList<Bomb>.new()
 		enemy: EntityList<Enemy>.new()
-		// bomb: EntityList<Bomb>.new()
 	}
 }
 
@@ -259,8 +260,8 @@ method mut EntitySystem
 fn clear() {
 	self.player.clear()
 	self.missile.clear()
+	self.bomb.clear()
 	self.enemy.clear()
-	// self.bomb.clear()
 }
 
 
@@ -268,8 +269,8 @@ method mut EntitySystem
 fn free() {
 	self.player.free()
 	self.missile.free()
+	self.bomb.free()
 	self.enemy.free()
-	// self.bomb.free()
 }
 
 generic T
@@ -277,6 +278,7 @@ struct Context {
 	viewport_size: Vec2
 	textures: &Textures
 	entity_system: &mut EntitySystem
+	scene_context: &mut scene::Context
 	generation: u32
 	delta: f32
 	handle: EntityHandle<T>
@@ -289,6 +291,7 @@ fn tick(scene_context: &mut scene::Context) {
 
 	self.player.generation += 1
 	self.missile.generation += 1
+	self.bomb.generation += 1
 	self.enemy.generation += 1
 
 	for info, index in self.player.generations.items {
@@ -297,6 +300,7 @@ fn tick(scene_context: &mut scene::Context) {
 			viewport_size: scene_context.viewport_size
 			textures: scene_context.textures
 			entity_system: self
+			scene_context
 			generation: self.player.generation
 			delta: scene_context.delta
 			handle: EntityHandle<Player> {
@@ -314,6 +318,7 @@ fn tick(scene_context: &mut scene::Context) {
 			viewport_size: scene_context.viewport_size
 			textures: scene_context.textures
 			entity_system: self
+			scene_context
 			generation: self.missile.generation
 			delta: scene_context.delta
 			handle: EntityHandle<Missile> {
@@ -324,6 +329,24 @@ fn tick(scene_context: &mut scene::Context) {
 
 		self.missile.entities.items[index].tick(context.&mut)
 	}
+	
+	for info, index in self.bomb.generations.items {
+		if info.may_be_ticked(self.bomb.generation).! => continue
+		mut context = Context<Bomb> {
+			viewport_size: scene_context.viewport_size
+			textures: scene_context.textures
+			entity_system: self
+			scene_context
+			generation: self.bomb.generation
+			delta: scene_context.delta
+			handle: EntityHandle<Bomb> {
+				index: index.(u32),
+				generation: info.added
+			}
+		}
+
+		self.bomb.entities.items[index].tick(context.&mut)
+	}
 
 	for info, index in self.enemy.generations.items {
 		if info.may_be_ticked(self.enemy.generation).! => continue
@@ -331,6 +354,7 @@ fn tick(scene_context: &mut scene::Context) {
 			viewport_size: scene_context.viewport_size
 			textures: scene_context.textures
 			entity_system: self
+			scene_context
 			generation: self.enemy.generation
 			delta: scene_context.delta
 			handle: EntityHandle<Enemy> {

@@ -10,6 +10,7 @@ const MinFrameRate = 60
 
 fn main() {
 	faylib::set_trace_log_level(faylib::LogWarning)
+	seed_random()
 	let scale = set_up_window()
 	let viewport_size = Vec2 { x: TargetWidth, y: TargetHeight }
 
@@ -60,6 +61,14 @@ fn main() {
 			Color.white()
 		)
 	}
+}
+
+fn seed_random() {
+	import fae::libc::TimeT, time
+
+	let null = null_pointer<TimeT>()
+	let seed = time(null).time_t.(u32)
+	faylib::set_random_seed(seed)
 }
 
 fn set_up_window(): f32 {

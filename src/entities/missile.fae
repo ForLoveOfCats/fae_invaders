@@ -2,6 +2,7 @@ import faylib::Vec2
 import sprite::Sprite, Textures
 import entity_system::EntitySystem, EntityHandle, Context
 import entities::enemy::Enemy
+import entities::bomb::Bomb
 
 struct Missile {
 	sprite: Sprite
@@ -19,7 +20,7 @@ fn fire(textures: &Textures, entity_system: &mut EntitySystem, position: Vec2) {
 
 method mut Missile
 fn tick(context: &mut Context<Missile>) {
-	const Speed = 1000 // Pixels per second
+	const Speed = 900 // Pixels per second
 
 	let speed = Speed * context.delta
 	let distance = Vec2 { x: 0, y: -speed }
@@ -35,6 +36,19 @@ fn tick(context: &mut Context<Missile>) {
 			let generation = context.entity_system.enemy.generations.items[index].added
 			let handle = EntityHandle<Enemy> { index: index.(u32), generation }
 			context.entity_system.enemy.remove(handle)
+
+			context.entity_system.missile.remove(context.handle)
+		}
+	}
+
+	for info, index in context.entity_system.bomb.generations.items {
+		if info.may_be_ticked(context.generation).! => continue
+
+		let bomb = context.entity_system.bomb.entities.get_ref(index)
+		if self.sprite.overlaps(bomb.sprite) {
+			let generation = context.entity_system.bomb.generations.items[index].added
+			let handle = EntityHandle<Bomb> { index: index.(u32), generation }
+			context.entity_system.bomb.remove(handle)
 
 			context.entity_system.missile.remove(context.handle)
 		}

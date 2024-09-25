@@ -1,15 +1,19 @@
 import faylib::Vec2
 import sprite::Sprite, Textures
 import entity_system::EntitySystem, Context
+import entities::bomb::Bomb
 
 const MaxDirectionDistance = 30 // Pixels
 const Speed = 40 // Pixels per second
+const InitialFireDelay = 0.2 // Seconds
+const FireDelay = 1 // Seconds
 
 struct Enemy {
 	sprite: Sprite
 	direction: Direction
 	distance_traveled: f32
 	max_distance: f32
+	fire_delay: f32
 }
 
 enum Direction {
@@ -27,7 +31,18 @@ fn spawn(textures: &Textures, entity_system: &mut EntitySystem, position: Vec2, 
 		direction
 		distance_traveled: 0
 		max_distance: MaxDirectionDistance
+		fire_delay: choose_initial_fire_delay()
 	})
+}
+
+fn choose_initial_fire_delay(): f32 {
+	let random = faylib::get_random_value(0, 10).(f32)
+	return InitialFireDelay + random / 18
+}
+
+fn choose_fire_delay(): f32 {
+	let random = faylib::get_random_value(0, 10).(f32)
+	return FireDelay + random / 8
 }
 
 method mut Enemy
@@ -60,6 +75,14 @@ fn tick(context: &mut Context<Enemy>) {
 					self.max_distance = MaxDirectionDistance * 2
 				}
 			}
+		}
+	}
+
+	self.fire_delay -= context.delta
+	if self.fire_delay <= 0 {
+		self.fire_delay = choose_fire_delay()
+		if faylib::get_random_value(1, 11) == 1 {
+			Bomb.fire(context.textures, context.entity_system, self.sprite.position)
 		}
 	}
 
