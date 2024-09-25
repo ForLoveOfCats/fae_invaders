@@ -103,17 +103,20 @@ fn scene_difficulty_selector(context: &mut Context, scene: &mut Scene::Difficult
 
 fn scene_transitioned_in_game(context: &mut Context, scene: &mut Scene::InGame) {
 	import entities::player::Player
-	import entities::enemy::Enemy
-	
-	for x_offset in -5..6 {
-		let x_offset = x_offset.(f32) * context.textures.enemy.width.(f32) * 1.4
-		for y_offset in 0..scene.difficulty * 2 {
-			let y_offset = y_offset.(f32) * context.textures.enemy.height.(f32) * 1.6
+	import entities::enemy::Enemy, Direction
+
+	for y_offset in 0..scene.difficulty * 2 {
+		let direction: Direction = if y_offset % 2 == 0  => yield Direction.Left
+		else => yield Direction.Right
+		let y_offset = y_offset.(f32) * context.textures.enemy.height.(f32) * 1.6
+
+		for x_offset in -5..6 {
+			let x_offset = x_offset.(f32) * context.textures.enemy.width.(f32) * 1.55
 			let position = Vec2 {
 				x: context.viewport_size.x / 2 + x_offset
 				y: context.textures.enemy.height.(f32) + y_offset
 			}
-			Enemy.spawn(context.textures, context.entity_system, position)
+			Enemy.spawn(context.textures, context.entity_system, position, direction)
 		}
 	}
 	

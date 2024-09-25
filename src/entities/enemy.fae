@@ -2,21 +2,66 @@ import faylib::Vec2
 import sprite::Sprite, Textures
 import entity_system::EntitySystem, Context
 
+const MaxDirectionDistance = 30 // Pixels
+const Speed = 40 // Pixels per second
+
 struct Enemy {
 	sprite: Sprite
+	direction: Direction
+	distance_traveled: f32
+	max_distance: f32
+}
+
+enum Direction {
+	Left
+	Right
 }
 
 method static Enemy
-fn spawn(textures: &Textures, entity_system: &mut EntitySystem, position: Vec2) {
+fn spawn(textures: &Textures, entity_system: &mut EntitySystem, position: Vec2, direction: Direction) {
 	entity_system.enemy.push(Enemy {
 		sprite: Sprite {
 			texture: textures.enemy.&
 			position
 		}
+		direction
+		distance_traveled: 0
+		max_distance: MaxDirectionDistance
 	})
 }
 
 method mut Enemy
-fn tick(_context: &mut Context<Enemy>) {
+fn tick(context: &mut Context<Enemy>) {
+	mut remaining_distance = Speed * context.delta
+
+	while remaining_distance > 0 {
+		let allowed_distance = self.max_distance - (self.distance_traveled + remaining_distance)
+		let distance = if allowed_distance <= 0 or remaining_distance < allowed_distance {
+			yield remaining_distance
+		} else => yield allowed_distance
+		remaining_distance -= distance
+		self.distance_traveled += distance
+
+		match self.direction {
+			Left {
+				self.sprite.position.x -= distance
+				if self.distance_traveled >= self.max_distance {
+					self.direction = Direction.Right
+					self.distance_traveled = 0
+					self.max_distance = MaxDirectionDistance * 2
+				}
+			}
+
+			Right {
+				self.sprite.position.x += distance
+				if self.distance_traveled >= self.max_distance {
+					self.direction = Direction.Left
+					self.distance_traveled = 0
+					self.max_distance = MaxDirectionDistance * 2
+				}
+			}
+		}
+	}
+
 	self.sprite.draw()
 }
