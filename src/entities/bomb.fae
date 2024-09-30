@@ -9,7 +9,7 @@ struct Bomb {
 }
 
 method static Bomb
-fn fire(textures: &Textures, entity_system: &mut EntitySystem, position: Vec2) {
+fn fire(textures: *Textures, entity_system: *mut EntitySystem, position: Vec2) {
 	entity_system.bomb.push(Bomb {
 		sprite: Sprite {
 			texture: textures.bomb.&
@@ -19,7 +19,7 @@ fn fire(textures: &Textures, entity_system: &mut EntitySystem, position: Vec2) {
 }
 
 method mut Bomb
-fn tick(context: &mut Context<Bomb>) {
+fn tick(context: *mut Context<Bomb>) {
 	const Speed = 75 // Pixels per second
 
 	let speed = Speed * context.delta

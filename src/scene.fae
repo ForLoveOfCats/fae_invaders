@@ -18,7 +18,7 @@ enum Scene {
 }
 
 method mut Scene
-fn transitioned(context: &mut Context) {
+fn transitioned(context: *mut Context) {
 	match self {
 		MainMenu => scene_transitioned_main_menu(context, self.&mut)
 		DifficultySelector => scene_transitioned_difficulty_selector(context, self.&mut)
@@ -29,7 +29,7 @@ fn transitioned(context: &mut Context) {
 }
 
 method mut Scene
-fn tick(context: &mut Context) {
+fn tick(context: *mut Context) {
 	match self {
 		MainMenu => scene_main_menu(context, self.&mut)
 		DifficultySelector => scene_difficulty_selector(context, self.&mut)
@@ -43,11 +43,11 @@ fn tick(context: &mut Context) {
 }
 
 struct Context {
-	textures: &Textures
-	entity_system: &mut EntitySystem
-	user_interface: &mut UserInterface
+	textures: *Textures
+	entity_system: *mut EntitySystem
+	user_interface: *mut UserInterface
 	font: Font
-	scene: &mut Scene
+	scene: *mut Scene
 	viewport_size: Vec2
 	delta: f32
 }
@@ -60,7 +60,7 @@ fn transition(to: Scene) {
 	self.scene.transitioned(self)
 }
 
-fn scene_transitioned_main_menu(context: &mut Context, scene: &mut Scene::MainMenu) {
+fn scene_transitioned_main_menu(context: *mut Context, scene: *mut Scene::MainMenu) {
 	context.user_interface.heading = "Fae Invaders"
 	context.user_interface.push(.Button {
 		text: "Start"
@@ -68,7 +68,7 @@ fn scene_transitioned_main_menu(context: &mut Context, scene: &mut Scene::MainMe
 	})
 }
 
-fn scene_main_menu(context: &mut Context, scene: &mut Scene::MainMenu) {
+fn scene_main_menu(context: *mut Context, scene: *mut Scene::MainMenu) {
 	if scene.start {
 		context.transition(.DifficultySelector {
 			one: false
@@ -78,7 +78,7 @@ fn scene_main_menu(context: &mut Context, scene: &mut Scene::MainMenu) {
 	}
 }
 
-fn scene_transitioned_difficulty_selector(context: &mut Context, scene: &mut Scene::DifficultySelector) {
+fn scene_transitioned_difficulty_selector(context: *mut Context, scene: *mut Scene::DifficultySelector) {
 	context.user_interface.heading = "Select Difficulty"
 	context.user_interface.push(.Button {
 		text: "Easy"
@@ -95,14 +95,14 @@ fn scene_transitioned_difficulty_selector(context: &mut Context, scene: &mut Sce
 	context.user_interface.selection = 1
 }
 
-fn scene_difficulty_selector(context: &mut Context, scene: &mut Scene::DifficultySelector) {
+fn scene_difficulty_selector(context: *mut Context, scene: *mut Scene::DifficultySelector) {
 	let shield_health: i32 = 3
 	if scene.one => context.transition(.InGame { difficulty: 1, shield_health })
 	else if scene.two => context.transition(.InGame { difficulty: 2, shield_health })
 	else if scene.three => context.transition(.InGame { difficulty: 3, shield_health })
 }
 
-fn scene_transitioned_in_game(context: &mut Context, scene: &mut Scene::InGame) {
+fn scene_transitioned_in_game(context: *mut Context, scene: *mut Scene::InGame) {
 	import entities::player::Player
 	import entities::enemy::Enemy, Direction
 
@@ -124,7 +124,7 @@ fn scene_transitioned_in_game(context: &mut Context, scene: &mut Scene::InGame) 
 	Player.spawn(context.textures, context.entity_system, context.viewport_size)
 }
 
-fn scene_in_game(context: &mut Context, scene: &mut Scene::InGame) {
+fn scene_in_game(context: *mut Context, scene: *mut Scene::InGame) {
 	const ShieldHeight = 30
 
 	if context.entity_system.player.all_dead() {
@@ -152,7 +152,7 @@ fn scene_in_game(context: &mut Context, scene: &mut Scene::InGame) {
 	}
 }
 
-fn scene_transitioned_lost(context: &mut Context, scene: &mut Scene::Lost) {
+fn scene_transitioned_lost(context: *mut Context, scene: *mut Scene::Lost) {
 	context.user_interface.heading = scene.reason
 	context.user_interface.push(.Button {
 		text: "Continue"
@@ -160,11 +160,11 @@ fn scene_transitioned_lost(context: &mut Context, scene: &mut Scene::Lost) {
 	})
 }
 
-fn scene_lost(context: &mut Context, scene: &mut Scene::Lost) {
+fn scene_lost(context: *mut Context, scene: *mut Scene::Lost) {
 	if scene.ok => context.transition(.MainMenu { start: false })
 }
 
-fn scene_transitioned_won(context: &mut Context, scene: &mut Scene::Won) {
+fn scene_transitioned_won(context: *mut Context, scene: *mut Scene::Won) {
 	context.user_interface.heading = "You Won!"
 	context.user_interface.push(.Button {
 		text: "Continue"
@@ -172,6 +172,6 @@ fn scene_transitioned_won(context: &mut Context, scene: &mut Scene::Won) {
 	})
 }
 
-fn scene_won(context: &mut Context, scene: &mut Scene::Won) {
+fn scene_won(context: *mut Context, scene: *mut Scene::Won) {
 	if scene.ok => context.transition(.MainMenu { start: false })
 }

@@ -13,12 +13,12 @@ const SelectionHeight = SelectionWidth
 enum Item {
 	Button {
 		text: str
-		pressed: &mut bool
+		pressed: *mut bool
 	}
 }
 
 method mut Item
-fn tick(scene_context: &mut scene::Context, rectangle: Rectangle, selected: bool) {
+fn tick(scene_context: *mut scene::Context, rectangle: Rectangle, selected: bool) {
 	import faylib::draw_text, is_key_pressed
 
 	match self {
@@ -73,7 +73,7 @@ fn push(item: Item) {
 }
 
 method mut UserInterface
-fn tick(scene_context: &mut scene::Context) {
+fn tick(scene_context: *mut scene::Context) {
 	import faylib::is_key_pressed
 
 	if is_key_pressed(key::W) => self.selection -= 1

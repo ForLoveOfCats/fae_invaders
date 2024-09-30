@@ -22,7 +22,7 @@ enum Direction {
 }
 
 method static Enemy
-fn spawn(textures: &Textures, entity_system: &mut EntitySystem, position: Vec2, direction: Direction) {
+fn spawn(textures: *Textures, entity_system: *mut EntitySystem, position: Vec2, direction: Direction) {
 	entity_system.enemy.push(Enemy {
 		sprite: Sprite {
 			texture: textures.enemy.&
@@ -46,7 +46,7 @@ fn choose_fire_delay(): f32 {
 }
 
 method mut Enemy
-fn tick(context: &mut Context<Enemy>) {
+fn tick(context: *mut Context<Enemy>) {
 	mut remaining_distance = Speed * context.delta
 
 	while remaining_distance > 0 {

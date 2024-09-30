@@ -15,7 +15,7 @@ const TextureFilterAnisotropic8X = 4
 const TextureFilterAnisotropic16X = 5
 
 extern "InitWindow"
-fn init_window(width: i32, height: i32, title: &u8)
+fn init_window(width: i32, height: i32, title: *u8)
 
 extern "CloseWindow"
 fn close_window()
@@ -81,13 +81,13 @@ extern "DrawRectangleRec"
 fn draw_rectangle(rectangle: Rectangle, color: Color)
 
 extern "LoadImage"
-fn load_image(path: &u8): Image
+fn load_image(path: *u8): Image
 
 extern "LoadRenderTexture"
 fn load_render_texture(width: i32, height: i32): RenderTexture2D
 
 extern "LoadTexture"
-fn load_texture(path: &u8): Texture2D
+fn load_texture(path: *u8): Texture2D
 
 extern "LoadTextureFromImage"
 fn load_texture_from_image(image: Image): Texture2D
@@ -105,7 +105,7 @@ extern "DrawTexturePro"
 fn draw_texture_pro(texture: Texture2D, source: Rectangle, destination: Rectangle, origin: Vec2, rotation: f32, tint: Color)
 
 extern "DrawTextEx"
-fn draw_text(font: Font, text: &u8, position: Vec2, font_size: f32, spacing: f32, tint: Color)
+fn draw_text(font: Font, text: *u8, position: Vec2, font_size: f32, spacing: f32, tint: Color)
 
 extern "IsKeyDown"
 fn is_key_down(key: i32): bool
@@ -122,8 +122,8 @@ struct Font {
 	glyph_count: i32
 	glyph_padding: i32
 	texture: Texture2D
-	rectangles: &mut Rectangle
-	glyphs: &mut GlyphInfo
+	rectangles: *mut Rectangle
+	glyphs: *mut GlyphInfo
 }
 
 struct GlyphInfo {
@@ -174,7 +174,7 @@ struct Rectangle {
 }
 
 struct Image {
-	data: &mut u8
+	data: *mut u8
 	width: i32
 	height: i32
 	mipmaps: i32

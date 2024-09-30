@@ -10,7 +10,7 @@ struct Player {
 }
 
 method static Player
-fn spawn(textures: &Textures, entity_system: &mut EntitySystem, viewport_size: Vec2) {
+fn spawn(textures: *Textures, entity_system: *mut EntitySystem, viewport_size: Vec2) {
 	entity_system.player.push(Player {
 		sprite: Sprite {
 			texture: textures.player.&
@@ -25,7 +25,7 @@ fn spawn(textures: &Textures, entity_system: &mut EntitySystem, viewport_size: V
 }
 
 method mut Player
-fn tick(context: &mut Context<Player>) {
+fn tick(context: *mut Context<Player>) {
 	import faylib::is_key_down, is_key_pressed
 
 	const TopSpeed = 750 // Pixels per second

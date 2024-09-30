@@ -276,16 +276,16 @@ fn free() {
 generic T
 struct Context {
 	viewport_size: Vec2
-	textures: &Textures
-	entity_system: &mut EntitySystem
-	scene_context: &mut scene::Context
+	textures: *Textures
+	entity_system: *mut EntitySystem
+	scene_context: *mut scene::Context
 	generation: u32
 	delta: f32
 	handle: EntityHandle<T>
 }
 
 method mut EntitySystem
-fn tick(scene_context: &mut scene::Context) {
+fn tick(scene_context: *mut scene::Context) {
 	// Newly added entities are not ticked until the following frame
 	// Removed entities are still ticked on the frame they are removed
 

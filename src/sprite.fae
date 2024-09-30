@@ -31,7 +31,7 @@ fn free() {
 }
 
 struct Sprite {
-	texture: &Texture2D
+	texture: *Texture2D
 	position: Vec2
 }
 
