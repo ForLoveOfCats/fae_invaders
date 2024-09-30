@@ -20,15 +20,20 @@ fn fire(textures: &Textures, entity_system: &mut EntitySystem, position: Vec2) {
 
 method mut Bomb
 fn tick(context: &mut Context<Bomb>) {
-	const Speed = 40 // Pixels per second
+	const Speed = 75 // Pixels per second
 
 	let speed = Speed * context.delta
 	let distance = Vec2 { x: 0, y: speed }
 	let reached = self.sprite.move(context.viewport_size, distance)
-	if reached.bottom {
+
+	if reached.bottom and context.scene_context.scene is scene: InGame {
 		context.entity_system.bomb.remove(context.handle)
-		let reason = "You Missed a Bomb!"
-		context.scene_context.transition(Scene.Lost { reason, ok: false })
+
+		scene.shield_health -= 1
+		if scene.shield_health <= 0 {
+			let reason = "The Shield Was Detroyed!"
+			context.scene_context.transition(Scene.Lost { reason, ok: false })
+		}
 	}
 
 	// This is dumb as hell and would *not* fly in a more complex project

@@ -41,8 +41,8 @@ fn choose_initial_fire_delay(): f32 {
 }
 
 fn choose_fire_delay(): f32 {
-	let random = faylib::get_random_value(0, 10).(f32)
-	return FireDelay + random / 8
+	let random = faylib::get_random_value(0, 12).(f32)
+	return FireDelay + random / 6
 }
 
 method mut Enemy
@@ -81,7 +81,7 @@ fn tick(context: &mut Context<Enemy>) {
 	self.fire_delay -= context.delta
 	if self.fire_delay <= 0 {
 		self.fire_delay = choose_fire_delay()
-		if faylib::get_random_value(1, 11) == 1 {
+		if faylib::get_random_value(1, 12) == 1 {
 			Bomb.fire(context.textures, context.entity_system, self.sprite.position)
 		}
 	}

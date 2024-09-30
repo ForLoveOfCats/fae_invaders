@@ -50,6 +50,7 @@ fn main() {
 		scene.tick(context.&mut)
 		faylib::end_texture_mode()
 
+		faylib::clear_background(Color.white())
 		let target_width = render_texture.texture.width.(f32)
 		let target_height = render_texture.texture.height.(f32)
 		faylib::draw_texture_pro(

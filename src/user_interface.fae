@@ -3,7 +3,7 @@ import fae::collections::list::List
 import faylib::Rectangle, Color, Vec2, draw_rectangle
 
 const Height = 34
-const Width = 250
+const Width = 380
 const Padding = 10
 
 const SelectionInset = 12
