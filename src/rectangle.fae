@@ -16,43 +16,17 @@ fn contains(point: Vec2): bool {
 
 method Rectangle
 fn overlaps(other: Rectangle): bool {
-	let a = self.contains(Vec2 {
-		x: other.x
-		y: other.y
-	})
-	let b = self.contains(Vec2 {
-		x: other.x + other.width
-		y: other.y
-	})
-
-	let c = self.contains(Vec2 {
-		x: other.x + other.width
-		y: other.y + other.height
-	})
-	let d = self.contains(Vec2 {
-		x: other.x
-		y: other.y + other.height
-	})
+	let a = self.contains(Vec2 { x: other.x, y: other.y })
+	let b = self.contains(Vec2 { x: other.x + other.width, y: other.y })
+	let c = self.contains(Vec2 { x: other.x + other.width, y: other.y + other.height })
+	let d = self.contains(Vec2 { x: other.x, y: other.y + other.height })
 
 	if a or b or c or d => return true
 
-	let a = other.contains(Vec2 {
-		x: self.x
-		y: self.y
-	})
-	let b = other.contains(Vec2 {
-		x: self.x + self.width
-		y: self.y
-	})
-
-	let c = other.contains(Vec2 {
-		x: self.x + self.width
-		y: self.y + self.height
-	})
-	let d = other.contains(Vec2 {
-		x: self.x
-		y: self.y + self.height
-	})
+	let a = other.contains(Vec2 { x: self.x, y: self.y })
+	let b = other.contains(Vec2 { x: self.x + self.width, y: self.y })
+	let c = other.contains(Vec2 { x: self.x + self.width, y: self.y + self.height })
+	let d = other.contains(Vec2 { x: self.x, y: self.y + self.height })
 
 	return a or b or c or d
 }
