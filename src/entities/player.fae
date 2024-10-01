@@ -26,6 +26,7 @@ fn spawn(textures: *Textures, entity_system: *mut EntitySystem, viewport_size: V
 
 method mut Player
 fn tick(context: *mut Context<Player>) {
+	import fae::math::min32, max32
 	import faylib::is_key_down, is_key_pressed
 
 	const TopSpeed = 750 // Pixels per second
@@ -39,8 +40,8 @@ fn tick(context: *mut Context<Player>) {
 	if is_key_down(key::A) => self.velocity.x -= acceleration + drag
 	if is_key_down(key::D) => self.velocity.x += acceleration + drag
 
-	if self.velocity.x < 0 => self.velocity.x = min(self.velocity.x + drag, 0)
-	if self.velocity.x > 0 => self.velocity.x = max(self.velocity.x - drag, 0)
+	if self.velocity.x < 0 => self.velocity.x = min32(self.velocity.x + drag, 0)
+	if self.velocity.x > 0 => self.velocity.x = max32(self.velocity.x - drag, 0)
 
 	if self.velocity.x < -TopSpeed => self.velocity.x = -TopSpeed
 	if self.velocity.x > TopSpeed => self.velocity.x = TopSpeed
@@ -61,14 +62,4 @@ fn tick(context: *mut Context<Player>) {
 	}
 
 	self.sprite.draw()
-}
-
-fn min(a: f32, b: f32): f32 {
-	if a < b => return a
-	return b
-}
-
-fn max(a: f32, b: f32): f32 {
-	if a > b => return a
-	return b
 }
