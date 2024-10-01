@@ -1,43 +1,57 @@
 import faylib::Vec2
 
 struct Rectangle {
-	upper_left: Vec2
-	lower_right: Vec2
+	x: f32
+	y: f32
+	width: f32
+	height: f32
 }
 
 method Rectangle
 fn contains(point: Vec2): bool {
-	let within_x = self.upper_left.x <= point.x and point.x <= self.lower_right.x
-	let within_y = self.upper_left.y <= point.y and point.y <= self.lower_right.y
+	let within_x = self.x <= point.x and point.x <= self.x + self.width
+	let within_y = self.y <= point.y and point.y <= self.y + self.height
 	return within_x and within_y
 }
 
 method Rectangle
 fn overlaps(other: Rectangle): bool {
-	let a = self.contains(other.upper_left)
+	let a = self.contains(Vec2 {
+		x: other.x
+		y: other.y
+	})
 	let b = self.contains(Vec2 {
-		x: other.lower_right.x
-		y: other.upper_left.y
+		x: other.x + other.width
+		y: other.y
 	})
 
-	let c = self.contains(other.lower_right)
+	let c = self.contains(Vec2 {
+		x: other.x + other.width
+		y: other.y + other.height
+	})
 	let d = self.contains(Vec2 {
-		x: other.upper_left.x
-		y: other.lower_right.y
+		x: other.x
+		y: other.y + other.height
 	})
 
 	if a or b or c or d => return true
 
-	let a = other.contains(self.upper_left)
+	let a = other.contains(Vec2 {
+		x: self.x
+		y: self.y
+	})
 	let b = other.contains(Vec2 {
-		x: self.lower_right.x
-		y: self.upper_left.y
+		x: self.x + self.width
+		y: self.y
 	})
 
-	let c = other.contains(self.lower_right)
+	let c = other.contains(Vec2 {
+		x: self.x + self.width
+		y: self.y + self.height
+	})
 	let d = other.contains(Vec2 {
-		x: self.upper_left.x
-		y: self.lower_right.y
+		x: self.x
+		y: self.y + self.height
 	})
 
 	return a or b or c or d

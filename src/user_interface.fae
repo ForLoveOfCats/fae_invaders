@@ -1,6 +1,7 @@
 import fae::collections::list::List
 
-import faylib::Rectangle, Color, Vec2, draw_rectangle
+import faylib::Color, Vec2, draw_rectangle
+import rectangle::Rectangle
 
 const Height = 34
 const Width = 380

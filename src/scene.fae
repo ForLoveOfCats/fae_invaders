@@ -1,4 +1,5 @@
-import faylib::Font, Vec2, Color, Rectangle
+import faylib::Font, Vec2, Color
+import rectangle::Rectangle
 import entity_system::EntitySystem
 import sprite::Textures
 import user_interface::UserInterface

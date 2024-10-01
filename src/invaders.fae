@@ -1,4 +1,5 @@
 import faylib::Color, Vec2
+import rectangle::Rectangle
 import sprite::Textures
 import entity_system::EntitySystem
 import scene::Scene, Context
@@ -55,8 +56,8 @@ fn main() {
 		let target_height = render_texture.texture.height.(f32)
 		faylib::draw_texture_pro(
 			render_texture.texture
-			faylib::Rectangle { x: 0, y: 0, width: target_width, height: -target_height }
-			faylib::Rectangle { x: 0, y: 0, width: target_width * scale, height: target_height * scale }
+			Rectangle { x: 0, y: 0, width: target_width, height: -target_height }
+			Rectangle { x: 0, y: 0, width: target_width * scale, height: target_height * scale }
 			Vec2.zero()
 			0
 			Color.white()

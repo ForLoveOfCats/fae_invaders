@@ -38,25 +38,17 @@ struct Sprite {
 method Sprite
 fn overlaps(other: Sprite): bool {
 	let a = Rectangle {
-		upper_left: Vec2 {
-			x: self.position.x - self.texture.width.(f32) / 2
-			y: self.position.y - self.texture.height.(f32) / 2
-		}
-		lower_right: Vec2 {
-			x: self.position.x + self.texture.width.(f32) / 2
-			y: self.position.y + self.texture.height.(f32) / 2
-		}
+		x: self.position.x - self.texture.width.(f32) / 2
+		y: self.position.y - self.texture.height.(f32) / 2
+		width: self.texture.width.(f32)
+		height: self.texture.height.(f32)
 	}
 
 	let b = Rectangle {
-		upper_left: Vec2 {
-			x: other.position.x - other.texture.width.(f32) / 2
-			y: other.position.y - other.texture.height.(f32) / 2
-		}
-		lower_right: Vec2 {
-			x: other.position.x + other.texture.width.(f32) / 2
-			y: other.position.y + other.texture.height.(f32) / 2
-		}
+		x: other.position.x - other.texture.width.(f32) / 2
+		y: other.position.y - other.texture.height.(f32) / 2
+		width: other.texture.width.(f32)
+		height: other.texture.height.(f32)
 	}
 
 	return a.overlaps(b)

@@ -1,3 +1,5 @@
+import rectangle::Rectangle
+
 const LogAll = 0
 const LogTrace = 1
 const LogDebug = 2
@@ -164,13 +166,6 @@ struct Vec2 {
 method static Vec2
 fn zero(): Vec2 {
 	return Vec2 { x: 0, y: 0 }
-}
-
-struct Rectangle {
-	x: f32
-	y: f32
-	width: f32
-	height: f32
 }
 
 struct Image {
