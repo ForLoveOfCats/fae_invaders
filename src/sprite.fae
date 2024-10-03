@@ -102,11 +102,9 @@ fn move(viewport_size: Vec2, distance: Vec2): ReachedEdge {
 
 method Sprite
 fn draw() {
-	import fae::math::round32
-
 	let position = Vec2 {
-		x: round32(self.position.x - self.texture.width.(f32) / 2)
-		y: round32(self.position.y - self.texture.height.(f32) / 2)
+		x: (self.position.x - self.texture.width.(f32) / 2).round()
+		y: (self.position.y - self.texture.height.(f32) / 2).round()
 	}
 	faylib::draw_texture(self.texture.*, position, Color.white())
 }

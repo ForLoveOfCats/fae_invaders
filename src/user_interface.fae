@@ -79,11 +79,7 @@ fn tick(scene_context: *mut scene::Context) {
 
 	if is_key_pressed(key::W) => self.selection -= 1
 	if is_key_pressed(key::S) => self.selection += 1
-
-	if self.selection >= self.items.length() {
-		self.selection = self.items.length() - 1
-	}
-	if self.selection < 0 => self.selection = 0
+	self.selection = self.selection.min(self.items.length() - 1).max(0)
 
 	let items_height = Height * self.items.length().(f32)
 	let padding_height = Padding * (self.items.length().(f32) - 1)
