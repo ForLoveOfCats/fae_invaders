@@ -4,8 +4,6 @@ import entity_system::EntitySystem
 import sprite::Textures
 import user_interface::UserInterface
 
-// This really wants a function pointer
-// However Fae doesn't have those yet, so here this is
 enum Scene {
 	MainMenu { start: bool }
 	DifficultySelector {
@@ -21,22 +19,22 @@ enum Scene {
 method mut Scene
 fn transitioned(context: *mut Context) {
 	match self {
-		MainMenu => scene_transitioned_main_menu(context, self.&mut)
-		DifficultySelector => scene_transitioned_difficulty_selector(context, self.&mut)
-		InGame => scene_transitioned_in_game(context, self.&mut)
-		Lost => scene_transitioned_lost(context, self.&mut)
-		Won => scene_transitioned_won(context, self.&mut)
+		MainMenu => self.transitioned(context)
+		DifficultySelector => self.transitioned(context)
+		InGame => self.transitioned(context)
+		Lost => self.transitioned(context)
+		Won => self.transitioned(context)
 	}
 }
 
 method mut Scene
 fn tick(context: *mut Context) {
 	match self {
-		MainMenu => scene_main_menu(context, self.&mut)
-		DifficultySelector => scene_difficulty_selector(context, self.&mut)
-		InGame => scene_in_game(context, self.&mut)
-		Lost => scene_lost(context, self.&mut)
-		Won => scene_won(context, self.&mut)
+		MainMenu => self.tick(context)
+		DifficultySelector => self.tick(context)
+		InGame => self.tick(context)
+		Lost => self.tick(context)
+		Won => self.tick(context)
 	}
 
 	context.user_interface.tick(context)
@@ -61,16 +59,18 @@ fn transition(to: Scene) {
 	self.scene.transitioned(self)
 }
 
-fn scene_transitioned_main_menu(context: *mut Context, scene: *mut Scene::MainMenu) {
+method mut Scene::MainMenu
+fn transitioned(context: *mut Context) {
 	context.user_interface.heading = "Fae Invaders"
 	context.user_interface.push(.Button {
 		text: "Start"
-		pressed: scene.start.&mut
+		pressed: self.start.&mut
 	})
 }
 
-fn scene_main_menu(context: *mut Context, scene: *mut Scene::MainMenu) {
-	if scene.start {
+method mut Scene::MainMenu
+fn tick(context: *mut Context) {
+	if self.start {
 		context.transition(.DifficultySelector {
 			one: false
 			two: false
@@ -79,35 +79,38 @@ fn scene_main_menu(context: *mut Context, scene: *mut Scene::MainMenu) {
 	}
 }
 
-fn scene_transitioned_difficulty_selector(context: *mut Context, scene: *mut Scene::DifficultySelector) {
+method mut Scene::DifficultySelector
+fn transitioned(context: *mut Context) {
 	context.user_interface.heading = "Select Difficulty"
 	context.user_interface.push(.Button {
 		text: "Easy"
-		pressed: scene.one.&mut
+		pressed: self.one.&mut
 	})
 	context.user_interface.push(.Button {
 		text: "Normal"
-		pressed: scene.two.&mut
+		pressed: self.two.&mut
 	})
 	context.user_interface.push(.Button {
 		text: "Hard"
-		pressed: scene.three.&mut
+		pressed: self.three.&mut
 	})
 	context.user_interface.selection = 1
 }
 
-fn scene_difficulty_selector(context: *mut Context, scene: *mut Scene::DifficultySelector) {
+method mut Scene::DifficultySelector
+fn tick(context: *mut Context) {
 	let shield_health: i32 = 3
-	if scene.one => context.transition(.InGame { difficulty: 1, shield_health })
-	else if scene.two => context.transition(.InGame { difficulty: 2, shield_health })
-	else if scene.three => context.transition(.InGame { difficulty: 3, shield_health })
+	if self.one => context.transition(.InGame { difficulty: 1, shield_health })
+	else if self.two => context.transition(.InGame { difficulty: 2, shield_health })
+	else if self.three => context.transition(.InGame { difficulty: 3, shield_health })
 }
 
-fn scene_transitioned_in_game(context: *mut Context, scene: *mut Scene::InGame) {
+method mut Scene::InGame
+fn transitioned(context: *mut Context) {
 	import entities::player::Player
 	import entities::enemy::Enemy, Direction
 
-	for y_offset in 0..scene.difficulty * 2 {
+	for y_offset in 0..self.difficulty * 2 {
 		let direction: Direction = if y_offset % 2 == 0  => yield Direction.Left
 		else => yield Direction.Right
 		let y_offset = y_offset.(f32) * context.textures.enemy.height.(f32) * 1.6
@@ -125,7 +128,8 @@ fn scene_transitioned_in_game(context: *mut Context, scene: *mut Scene::InGame) 
 	Player.spawn(context.textures, context.entity_system, context.viewport_size)
 }
 
-fn scene_in_game(context: *mut Context, scene: *mut Scene::InGame) {
+method mut Scene::InGame
+fn tick(context: *mut Context) {
 	const ShieldHeight = 30
 
 	if context.entity_system.player.all_dead() {
@@ -139,7 +143,7 @@ fn scene_in_game(context: *mut Context, scene: *mut Scene::InGame) {
 		return
 	}
 
-	for offset in 1..scene.shield_health.(isize) + 1 {
+	for offset in 1..self.shield_health.(isize) + 1 {
 		let height = offset.(f32) * ShieldHeight
 		let rectangle = Rectangle {
 			x: 0
@@ -153,26 +157,30 @@ fn scene_in_game(context: *mut Context, scene: *mut Scene::InGame) {
 	}
 }
 
-fn scene_transitioned_lost(context: *mut Context, scene: *mut Scene::Lost) {
-	context.user_interface.heading = scene.reason
+method mut Scene::Lost
+fn transitioned(context: *mut Context) {
+	context.user_interface.heading = self.reason
 	context.user_interface.push(.Button {
 		text: "Continue"
-		pressed: scene.ok.&mut
+		pressed: self.ok.&mut
 	})
 }
 
-fn scene_lost(context: *mut Context, scene: *mut Scene::Lost) {
-	if scene.ok => context.transition(.MainMenu { start: false })
+method mut Scene::Lost
+fn tick(context: *mut Context) {
+	if self.ok => context.transition(.MainMenu { start: false })
 }
 
-fn scene_transitioned_won(context: *mut Context, scene: *mut Scene::Won) {
+method mut Scene::Won
+fn transitioned(context: *mut Context) {
 	context.user_interface.heading = "You Won!"
 	context.user_interface.push(.Button {
 		text: "Continue"
-		pressed: scene.ok.&mut
+		pressed: self.ok.&mut
 	})
 }
 
-fn scene_won(context: *mut Context, scene: *mut Scene::Won) {
-	if scene.ok => context.transition(.MainMenu { start: false })
+method mut Scene::Won
+fn tick(context: *mut Context) {
+	if self.ok => context.transition(.MainMenu { start: false })
 }
