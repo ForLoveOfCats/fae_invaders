@@ -25,17 +25,11 @@ fn tick(scene_context: *mut scene::Context, rectangle: Rectangle, selected: bool
 	match self {
 		Button {
 			draw_rectangle(rectangle, Color.rgb(200, 200, 200))
-			draw_text(
-				scene_context.font
-				self.text.pointer
-				Vec2 {
-					x: rectangle.x + SelectionInset + SelectionWidth + SelectionInset
-					y: rectangle.y + 8
-				}
-				20
-				2
-				Color.rgb(0, 0, 0)
-			)
+
+			const TextOffset = SelectionInset + SelectionWidth + SelectionInset
+			let position = Vec2 { x: rectangle.x + TextOffset, y: rectangle.y + 8 }
+			draw_text(scene_context.font, self.text.pointer, position, 20, 2, Color.black())
+
 			if selected and is_key_pressed(key::Enter) => self.pressed.* = true
 		}
 	}
