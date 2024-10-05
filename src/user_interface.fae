@@ -12,27 +12,64 @@ const SelectionWidth = Height - SelectionInset - SelectionInset
 const SelectionHeight = SelectionWidth
 
 enum Item {
+	disabled: bool
+
 	Button {
 		text: str
 		pressed: *mut bool
 	}
 }
 
+method static Item::Button
+fn new(text: str, pressed: *mut bool): Item {
+	return .Button { disabled: false, text, pressed }
+}
+
 method mut Item
 fn tick(scene_context: *mut scene::Context, rectangle: Rectangle, selected: bool) {
-	import faylib::draw_text, is_key_pressed
-
 	match self {
 		Button {
 			draw_rectangle(rectangle, Color.rgb(200, 200, 200))
 
 			const TextOffset = SelectionInset + SelectionWidth + SelectionInset
 			let position = Vec2 { x: rectangle.x + TextOffset, y: rectangle.y + 8 }
-			draw_text(scene_context.font, self.text.pointer, position, 20, 2, Color.black())
+			faylib::draw_text(scene_context.font, self.text.pointer, position, 20, 2, Color.black())
 
-			if selected and is_key_pressed(key::Enter) => self.pressed.* = true
+			if self.disabled == true => return
+			if selected and is_fire_pressed() => self.pressed.* = true
 		}
 	}
+}
+
+enum TimerStatus {
+	Fired
+	None
+}
+
+struct Timer {
+	remaining: f32 internal
+	already_fired: bool internal
+}
+
+method static Timer
+fn new(delay: f32): Timer {
+	return Timer {
+		remaining: delay
+		already_fired: false
+	}
+}
+
+method mut Timer
+fn tick(delta: f32): TimerStatus {
+	if self.already_fired => return .None
+	self.remaining -= delta
+
+	if self.remaining <= 0 {
+		self.already_fired = true
+		return .Fired
+	}
+
+	return .None
 }
 
 struct UserInterface {
@@ -109,9 +146,21 @@ fn tick(scene_context: *mut scene::Context) {
 				width: SelectionWidth
 				height: SelectionHeight
 			}
-			draw_rectangle(rectangle, Color.rgb(200, 100, 100))
+
+			let color = if item.disabled => yield Color.rgb(100, 100, 100)
+			else => yield Color.rgb(255, 0, 160)
+
+			draw_rectangle(rectangle, color)
 		}
 
 		y += Height + Padding
 	}
+}
+
+fn is_fire_pressed(): bool {
+	for key in []i32 { key::Enter, key::Space, key::K } {
+		if faylib::is_key_pressed(key) => return true
+	}
+
+	return false
 }

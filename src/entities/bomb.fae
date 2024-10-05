@@ -32,7 +32,7 @@ fn tick(context: *mut Context<Bomb>) {
 		scene.shield_health -= 1
 		if scene.shield_health <= 0 {
 			let reason = "The Shield Was Detroyed!"
-			context.scene_context.transition(Scene.Lost { reason, ok: false })
+			context.scene_context.transition(Scene::Lost.new(reason))
 		}
 	}
 

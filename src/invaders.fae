@@ -25,7 +25,7 @@ fn main() {
 	mut entity_system = EntitySystem.new()
 	defer entity_system.free()
 
-	mut scene: Scene = .MainMenu { start: false }
+	mut scene = Scene::MainMenu.new()
 	mut user_interface = UserInterface.new()
 	defer user_interface.free()
 	mut context = Context {

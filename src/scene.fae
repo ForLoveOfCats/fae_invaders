@@ -2,18 +2,16 @@ import faylib::Font, Vec2, Color
 import rectangle::Rectangle
 import entity_system::EntitySystem
 import sprite::Textures
-import user_interface::UserInterface
+import user_interface::UserInterface, Timer
+
+const GameEndDelay = 1
 
 enum Scene {
 	MainMenu { start: bool }
-	DifficultySelector {
-		one: bool
-		two: bool
-		three: bool
-	}
+	DifficultySelector { one: bool, two: bool, three: bool }
 	InGame { difficulty: isize, shield_health: i32 }
-	Lost { reason: str, ok: bool }
-	Won { ok: bool }
+	Lost { reason: str, ok: bool, timer: Timer }
+	Won { ok: bool, timer: Timer }
 }
 
 method mut Scene
@@ -59,10 +57,16 @@ fn transition(to: Scene) {
 	self.scene.transitioned(self)
 }
 
+method static Scene::MainMenu
+fn new(): Scene {
+	return .MainMenu { start: false }
+}
+
 method mut Scene::MainMenu
 fn transitioned(context: *mut Context) {
 	context.user_interface.heading = "Fae Invaders"
-	context.user_interface.push(.Button {
+	context.user_interface.push(user_interface::Item.Button {
+		disabled: false
 		text: "Start"
 		pressed: self.start.&mut
 	})
@@ -71,11 +75,16 @@ fn transitioned(context: *mut Context) {
 method mut Scene::MainMenu
 fn tick(context: *mut Context) {
 	if self.start {
-		context.transition(.DifficultySelector {
-			one: false
-			two: false
-			three: false
-		})
+		context.transition(Scene::DifficultySelector.new())
+	}
+}
+
+method static Scene::DifficultySelector
+fn new(): Scene {
+	return .DifficultySelector {
+		one: false
+		two: false
+		three: false
 	}
 }
 
@@ -83,14 +92,17 @@ method mut Scene::DifficultySelector
 fn transitioned(context: *mut Context) {
 	context.user_interface.heading = "Select Difficulty"
 	context.user_interface.push(.Button {
+		disabled: false
 		text: "Easy"
 		pressed: self.one.&mut
 	})
 	context.user_interface.push(.Button {
+		disabled: false
 		text: "Normal"
 		pressed: self.two.&mut
 	})
 	context.user_interface.push(.Button {
+		disabled: false
 		text: "Hard"
 		pressed: self.three.&mut
 	})
@@ -99,10 +111,15 @@ fn transitioned(context: *mut Context) {
 
 method mut Scene::DifficultySelector
 fn tick(context: *mut Context) {
-	let shield_health: i32 = 3
-	if self.one => context.transition(.InGame { difficulty: 1, shield_health })
-	else if self.two => context.transition(.InGame { difficulty: 2, shield_health })
-	else if self.three => context.transition(.InGame { difficulty: 3, shield_health })
+	if self.one => context.transition(Scene::InGame.new(1))
+	else if self.two => context.transition(Scene::InGame.new(2))
+	else if self.three => context.transition(Scene::InGame.new(3))
+}
+
+
+method static Scene::InGame
+fn new(difficulty: isize): Scene {
+	return .InGame { difficulty, shield_health: 3 }
 }
 
 method mut Scene::InGame
@@ -134,12 +151,12 @@ fn tick(context: *mut Context) {
 
 	if context.entity_system.player.all_dead() {
 		let reason = "You Died!"
-		context.transition(.Lost { reason, ok: false })
+		context.transition(Scene::Lost.new(reason))
 		return
 	}
 
 	if context.entity_system.enemy.all_dead() {
-		context.transition(.Won { ok: false })
+		context.transition(Scene::Won.new())
 		return
 	}
 
@@ -157,30 +174,70 @@ fn tick(context: *mut Context) {
 	}
 }
 
+method static Scene::Lost
+fn new(reason: str): Scene {
+	return .Lost {
+		reason
+		ok: false
+		timer: Timer.new(GameEndDelay)
+	}
+}
+
 method mut Scene::Lost
 fn transitioned(context: *mut Context) {
+	self.setup_ui(context, true)
+}
+
+method mut Scene::Lost
+fn tick(context: *mut Context) {
+	if self.timer.tick(context.delta) is Fired {
+		self.setup_ui(context, false)
+	}
+
+	if self.ok => context.transition(Scene::MainMenu.new())
+}
+
+method mut Scene::Lost
+fn setup_ui(context: *mut Context, disabled: bool) {
+	context.user_interface.clear()
 	context.user_interface.heading = self.reason
 	context.user_interface.push(.Button {
+		disabled
 		text: "Continue"
 		pressed: self.ok.&mut
 	})
 }
 
-method mut Scene::Lost
-fn tick(context: *mut Context) {
-	if self.ok => context.transition(.MainMenu { start: false })
+
+method static Scene::Won
+fn new(): Scene {
+	return .Won {
+		ok: false
+		timer: Timer.new(GameEndDelay)
+	}
 }
 
 method mut Scene::Won
 fn transitioned(context: *mut Context) {
-	context.user_interface.heading = "You Won!"
-	context.user_interface.push(.Button {
-		text: "Continue"
-		pressed: self.ok.&mut
-	})
+	self.setup_ui(context, true)
 }
 
 method mut Scene::Won
 fn tick(context: *mut Context) {
-	if self.ok => context.transition(.MainMenu { start: false })
+	if self.timer.tick(context.delta) is Fired {
+		self.setup_ui(context, false)
+	}
+
+	if self.ok => context.transition(Scene::MainMenu.new())
+}
+
+method mut Scene::Won
+fn setup_ui(context: *mut Context, disabled: bool) {
+	context.user_interface.clear()
+	context.user_interface.heading = "You Won!"
+	context.user_interface.push(.Button {
+		disabled
+		text: "Continue"
+		pressed: self.ok.&mut
+	})
 }
