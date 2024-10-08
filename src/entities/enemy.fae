@@ -37,11 +37,11 @@ fn spawn(textures: *Textures, entity_system: *mut EntitySystem, position: Vec2, 
 
 fn choose_initial_fire_delay(): f32 {
 	let random = faylib::get_random_value(0, 10).(f32)
-	return InitialFireDelay + random / 18
+	return InitialFireDelay + random / 10
 }
 
 fn choose_fire_delay(): f32 {
-	let random = faylib::get_random_value(0, 12).(f32)
+	let random = faylib::get_random_value(0, 20).(f32)
 	return FireDelay + random / 6
 }
 
@@ -81,7 +81,19 @@ fn tick(context: *mut Context<Enemy>) {
 	self.fire_delay -= context.delta
 	if self.fire_delay <= 0 {
 		self.fire_delay = choose_fire_delay()
-		if faylib::get_random_value(1, 12) == 1 {
+
+		let remaining = context.entity_system.enemy.live_count
+		let initial = context.scene.initial_enemy_count
+		let percent_remaining = remaining.(f64) / initial.(f64)
+
+		let remaining_boost = (1 - percent_remaining) * 0.4
+		const BaseChance = 0.08
+		let chance = (BaseChance + remaining_boost).min(1)
+
+		let upper = 1 / chance
+		let rounded_upper = upper.round().(i32).max(1)
+
+		if faylib::get_random_value(1, rounded_upper) == 1 {
 			Bomb.fire(context.textures, context.sounds, context.entity_system, self.sprite.position)
 		}
 	}

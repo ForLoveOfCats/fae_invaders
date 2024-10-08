@@ -28,10 +28,10 @@ method mut Player
 fn tick(context: *mut Context<Player>) {
 	import faylib::is_key_down
 
-	const TopSpeed = 500 // Pixels per second
-	const Acceleration = 800 // Pixels per second per second
+	const TopSpeed = 600 // Pixels per second
+	const Acceleration = 900 // Pixels per second per second
 	const Drag = 2800 // Pixels per second per second
-	const FireDelay = 0.145 // Seconds
+	const FireDelay = 0.13 // Seconds
 
 	let drag = Drag * context.delta
 	let acceleration = Acceleration * context.delta

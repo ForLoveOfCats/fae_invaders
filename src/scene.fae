@@ -10,7 +10,7 @@ const GameEndDelay = 1
 enum Scene {
 	MainMenu { start: bool }
 	DifficultySelector { one: bool, two: bool, three: bool }
-	InGame { difficulty: isize, shield_health: i32 }
+	InGame { difficulty: isize, initial_enemy_count: isize, shield_health: i32 }
 	Lost { reason: str, ok: bool, timer: Timer }
 	Won { ok: bool, timer: Timer }
 }
@@ -141,7 +141,7 @@ fn tick(context: *mut Context) {
 
 method static Scene::InGame
 fn new(difficulty: isize): Scene {
-	return .InGame { difficulty, shield_health: 3 }
+	return .InGame { difficulty, initial_enemy_count: 0, shield_health: 3 }
 }
 
 method mut Scene::InGame
@@ -149,6 +149,7 @@ fn transitioned(context: *mut Context) {
 	import entities::player::Player
 	import entities::enemy::Enemy, Direction
 
+	mut initial_enemy_count: isize = 0
 	for y_offset in 0..self.difficulty * 2 {
 		let direction: Direction = if y_offset % 2 == 0  => yield Direction.Left
 		else => yield Direction.Right
@@ -161,9 +162,11 @@ fn transitioned(context: *mut Context) {
 				y: context.textures.enemy.height.(f32) + y_offset
 			}
 			Enemy.spawn(context.textures, context.entity_system, position, direction)
+			initial_enemy_count += 1
 		}
 	}
-	
+
+	self.initial_enemy_count = initial_enemy_count
 	Player.spawn(context.textures, context.entity_system, context.viewport_size)
 }
 

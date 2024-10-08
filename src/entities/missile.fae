@@ -22,7 +22,7 @@ fn fire(textures: *Textures, sounds: *mut Sounds, entity_system: *mut EntitySyst
 
 method mut Missile
 fn tick(context: *mut Context<Missile>) {
-	const Speed = 1000 // Pixels per second
+	const Speed = 1400 // Pixels per second
 
 	let speed = Speed * context.delta
 	let distance = Vec2 { x: 0, y: -speed }

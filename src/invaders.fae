@@ -52,11 +52,8 @@ fn main() {
 	scene.transitioned(context.&mut)
 
 	while faylib::window_should_close().! {
-		sounds.tick()
 		context.delta = faylib::get_frame_time()
-
 		faylib::begin_drawing()
-		defer faylib::end_drawing()
 
 		faylib::begin_texture_mode(render_texture)
 		faylib::clear_background(Color.white())
@@ -75,7 +72,9 @@ fn main() {
 			Color.white()
 		)
 
+		faylib::end_drawing()
 		scene_tracker.handle_transition(context.&mut)
+		sounds.tick()
 	}
 }
 
