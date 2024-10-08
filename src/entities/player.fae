@@ -56,7 +56,7 @@ fn tick(context: *mut Context<Player>) {
 			x: self.sprite.position.x + random
 			y: self.sprite.position.y - half_height
 		}
-		Missile.fire(context.textures, context.entity_system, position)
+		Missile.fire(context.textures, context.sounds, context.entity_system, position)
 		self.fire_delay = FireDelay
 	}
 

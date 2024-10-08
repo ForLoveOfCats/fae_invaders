@@ -2,6 +2,7 @@ import faylib::Font, Vec2, Color
 import rectangle::Rectangle
 import entity_system::EntitySystem
 import sprite::Textures
+import sound::Sounds
 import user_interface::UserInterface, Timer
 
 const GameEndDelay = 1
@@ -69,6 +70,7 @@ fn handle_transition(context: *mut Context) {
 
 struct Context {
 	textures: *Textures
+	sounds: *mut Sounds
 	entity_system: *mut EntitySystem
 	user_interface: *mut UserInterface
 	font: Font

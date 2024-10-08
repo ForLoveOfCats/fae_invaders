@@ -1,5 +1,6 @@
 import faylib::Vec2
 import sprite::Sprite, Textures
+import sound::Sounds
 import entity_system::EntitySystem, Context
 import entities::explosion::Explosion
 
@@ -8,13 +9,15 @@ struct Missile {
 }
 
 method static Missile
-fn fire(textures: *Textures, entity_system: *mut EntitySystem, position: Vec2) {
+fn fire(textures: *Textures, sounds: *mut Sounds, entity_system: *mut EntitySystem, position: Vec2) {
 	entity_system.missile.push(Missile {
 		sprite: Sprite {
 			texture: textures.missile.&
 			position
 		}
 	})
+
+	sounds.play(sounds.missile_fire)
 }
 
 method mut Missile
@@ -31,7 +34,7 @@ fn tick(context: *mut Context<Missile>) {
 		if self.sprite.overlaps(enemy.entity.sprite) {
 			context.entity_system.enemy.remove(enemy.handle)
 			context.entity_system.missile.remove(context.handle)
-			Explosion.spawn(context.textures, context.entity_system, self.sprite.position)
+			Explosion.spawn(context.textures, context.sounds, context.entity_system, self.sprite.position)
 		}
 	}
 
@@ -40,7 +43,7 @@ fn tick(context: *mut Context<Missile>) {
 		if self.sprite.overlaps(bomb.entity.sprite) {
 			context.entity_system.bomb.remove(bomb.handle)
 			context.entity_system.missile.remove(context.handle)
-			Explosion.spawn(context.textures, context.entity_system, self.sprite.position)
+			Explosion.spawn(context.textures, context.sounds, context.entity_system, self.sprite.position)
 		}
 	}
 

@@ -1,5 +1,6 @@
 import faylib::Vec2
 import sprite::Sprite, Textures
+import sound::Sounds
 import entity_system::EntitySystem, Context
 import scene::Scene
 import entities::explosion::Explosion
@@ -9,13 +10,15 @@ struct Bomb {
 }
 
 method static Bomb
-fn fire(textures: *Textures, entity_system: *mut EntitySystem, position: Vec2) {
+fn fire(textures: *Textures, sounds: *mut Sounds, entity_system: *mut EntitySystem, position: Vec2) {
 	entity_system.bomb.push(Bomb {
 		sprite: Sprite {
 			texture: textures.bomb.&
 			position
 		}
 	})
+
+	sounds.play(sounds.bomb_drop)
 }
 
 method mut Bomb
@@ -28,9 +31,11 @@ fn tick(context: *mut Context<Bomb>) {
 
 	if reached.bottom {
 		context.entity_system.bomb.remove(context.handle)
-		Explosion.spawn(context.textures, context.entity_system, self.sprite.position)
+		Explosion.spawn(context.textures, context.sounds, context.entity_system, self.sprite.position)
 
 		context.scene.shield_health -= 1
+		context.sounds.play(context.sounds.shield_damaged)
+
 		if context.scene.shield_health <= 0 {
 			let reason = "The Shield Was Detroyed!"
 			context.scene_tracker.transition(Scene::Lost.new(reason))
@@ -42,6 +47,7 @@ fn tick(context: *mut Context<Bomb>) {
 		if self.sprite.overlaps(player.entity.sprite) {
 			context.entity_system.player.remove(player.handle)
 			context.entity_system.bomb.remove(context.handle)
+			context.sounds.play(context.sounds.ship_explosion)
 		}
 	}
 

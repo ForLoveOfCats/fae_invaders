@@ -115,6 +115,42 @@ fn is_key_down(key: i32): bool
 extern "IsKeyPressed"
 fn is_key_pressed(key: i32): bool
 
+extern "InitAudioDevice"
+fn init_audio_device()
+
+extern "CloseAudioDevice"
+fn close_audio_device()
+
+extern "SetMasterVolume"
+fn set_master_volume(volume: f32)
+
+extern "GetMasterVolume"
+fn get_master_volume(): f32
+
+extern "IsAudioDeviceReady"
+fn is_audio_device_ready(): bool
+
+extern "LoadSound"
+fn load_sound(file_name: *u8): Sound
+
+extern "UnloadSound"
+fn unload_sound(sound: Sound)
+
+extern "LoadSoundAlias"
+fn load_sound_alias(source: Sound): Sound
+
+extern "UnloadSoundAlias"
+fn unload_sound_alias(alias: Sound)
+
+extern "PlaySound"
+fn play_sound(sound: Sound)
+
+extern "StopSound"
+fn stop_sound(sound: Sound)
+
+extern "IsSoundPlaying"
+fn is_sound_playing(sound: Sound): bool
+
 struct Monitor {
 	id: i32
 }
@@ -194,3 +230,21 @@ struct RenderTexture2D {
 	texture: Texture2D
 	depth: Texture2D
 }
+
+struct Sound {
+	stream: AudioStream
+	frame_count: u32
+}
+
+struct AudioStream {
+	buffer: *mut rAudioBuffer
+	processor: *mut rAudioProcessor
+
+	sample_rate: u32
+	sample_size: u32
+	channels: u32
+}
+
+struct rAudioBuffer {}
+
+struct rAudioProcessor {}

@@ -82,7 +82,7 @@ fn tick(context: *mut Context<Enemy>) {
 	if self.fire_delay <= 0 {
 		self.fire_delay = choose_fire_delay()
 		if faylib::get_random_value(1, 12) == 1 {
-			Bomb.fire(context.textures, context.entity_system, self.sprite.position)
+			Bomb.fire(context.textures, context.sounds, context.entity_system, self.sprite.position)
 		}
 	}
 

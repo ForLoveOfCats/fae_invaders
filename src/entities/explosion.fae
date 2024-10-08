@@ -1,5 +1,6 @@
 import faylib::Vec2
 import sprite::Sprite, Textures
+import sound::Sounds
 import entity_system::EntitySystem, Context
 
 const ExplosionLifetime = 0.08
@@ -10,8 +11,7 @@ struct Explosion {
 }
 
 method static Explosion
-fn spawn(textures: *Textures, entity_system: *mut EntitySystem, position: Vec2) {
-	println("spawning explosion")
+fn spawn(textures: *Textures, sounds: *mut Sounds, entity_system: *mut EntitySystem, position: Vec2) {
 	entity_system.explosion.push(Explosion {
 		sprite: Sprite {
 			texture: textures.explosion.&
@@ -19,11 +19,12 @@ fn spawn(textures: *Textures, entity_system: *mut EntitySystem, position: Vec2) 
 		}
 		remaining_life: ExplosionLifetime
 	})
+
+	sounds.play(sounds.explosion)
 }
 
 method mut Explosion
 fn tick(context: *mut Context<Explosion>) {
-	println("ticking explosion")
 	self.remaining_life -= context.delta
 	if self.remaining_life <= 0 {
 		context.entity_system.explosion.remove(context.handle)

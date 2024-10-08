@@ -1,6 +1,7 @@
 import faylib::Color, Vec2
 import rectangle::Rectangle
 import sprite::Textures
+import sound::Sounds
 import entity_system::EntitySystem
 import scene::Scene, SceneTracker, Context
 import user_interface::UserInterface
@@ -22,6 +23,14 @@ fn main() {
 	let textures = Textures.load()
 	defer textures.free()
 
+	faylib::init_audio_device()
+	if faylib::is_audio_device_ready().! => panicf("Audio device could not be initialized")
+	defer faylib::close_audio_device()
+	faylib::set_master_volume(0.5)
+
+	mut sounds = Sounds.load()
+	defer sounds.free()
+
 	mut entity_system = EntitySystem.new()
 	defer entity_system.free()
 
@@ -31,6 +40,7 @@ fn main() {
 	defer user_interface.free()
 	mut context = Context {
 		textures: textures.&
+		sounds: sounds.&mut
 		entity_system: entity_system.&mut
 		user_interface: user_interface.&mut
 		font: faylib::get_default_font()
@@ -42,6 +52,7 @@ fn main() {
 	scene.transitioned(context.&mut)
 
 	while faylib::window_should_close().! {
+		sounds.tick()
 		context.delta = faylib::get_frame_time()
 
 		faylib::begin_drawing()

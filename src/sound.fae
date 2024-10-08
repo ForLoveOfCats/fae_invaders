@@ -1,0 +1,79 @@
+import fae::collections::list::List
+
+struct SoundEffect {
+	sound: faylib::Sound
+}
+
+method static SoundEffect
+fn load(path: str): SoundEffect {
+	return SoundEffect {
+		sound: faylib::load_sound(path.pointer)
+	}
+}
+
+struct Sounds {
+	explosion: SoundEffect
+	bomb_drop: SoundEffect
+	missile_fire: SoundEffect
+	shield_damaged: SoundEffect
+	ship_explosion: SoundEffect
+
+	aliases: List<faylib::Sound> internal
+}
+
+method static Sounds
+fn load(): Sounds {
+	return Sounds {
+		explosion: SoundEffect.load("./assets/explosion.wav")
+		bomb_drop: SoundEffect.load("./assets/bomb_drop.wav")
+		missile_fire: SoundEffect.load("./assets/missile_fire.wav")
+		shield_damaged: SoundEffect.load("./assets/shield_damaged.wav")
+		ship_explosion: SoundEffect.load("./assets/ship_explosion.wav")
+
+		aliases: List<faylib::Sound>.new()
+	}
+}
+
+method Sounds
+fn free() {
+	for alias in self.aliases.items {
+		if faylib::is_sound_playing(alias) {
+			faylib::stop_sound(alias)
+		}
+	}
+
+	fn unload(effect: SoundEffect) {
+		if faylib::is_sound_playing(effect.sound) {
+			faylib::stop_sound(effect.sound)
+		}
+		faylib::unload_sound(effect.sound)
+	}
+
+	unload(self.explosion)
+	unload(self.bomb_drop)
+	unload(self.missile_fire)
+	unload(self.shield_damaged)
+	unload(self.ship_explosion)
+}
+
+method mut Sounds
+fn play(effect: SoundEffect) {
+	let alias = faylib::load_sound_alias(effect.sound)
+	faylib::play_sound(alias)
+	self.aliases.push(alias)
+}
+
+method mut Sounds
+fn tick() {
+	mut index: isize = 0
+	while index < self.aliases.length() {
+		let alias = self.aliases.get(index)
+		if faylib::is_sound_playing(alias) {
+			index += 1
+			continue
+		}
+
+		faylib::unload_sound_alias(alias)
+		self.aliases.remove(index)
+	}
+}

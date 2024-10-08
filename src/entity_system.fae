@@ -2,6 +2,7 @@ import fae::collections::list::List
 
 import faylib::Vec2
 import sprite::Textures
+import sound::Sounds
 import scene::Scene, SceneTracker
 import entities::player::Player
 import entities::missile::Missile
@@ -321,6 +322,7 @@ generic T
 struct Context {
 	viewport_size: Vec2
 	textures: *Textures
+	sounds: *mut Sounds
 	entity_system: *mut EntitySystem
 	scene: *mut Scene::InGame
 	scene_tracker: *mut SceneTracker
@@ -339,6 +341,7 @@ fn new(
 	return Context<T> {
 		viewport_size: scene_context.viewport_size
 		textures: scene_context.textures
+		sounds: scene_context.sounds
 		entity_system
 		scene
 		scene_tracker: scene_context.scene_tracker
