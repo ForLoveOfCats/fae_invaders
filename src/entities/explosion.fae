@@ -1,0 +1,33 @@
+import faylib::Vec2
+import sprite::Sprite, Textures
+import entity_system::EntitySystem, Context
+
+const ExplosionLifetime = 0.08
+
+struct Explosion {
+	sprite: Sprite
+	remaining_life: f32
+}
+
+method static Explosion
+fn spawn(textures: *Textures, entity_system: *mut EntitySystem, position: Vec2) {
+	println("spawning explosion")
+	entity_system.explosion.push(Explosion {
+		sprite: Sprite {
+			texture: textures.explosion.&
+			position
+		}
+		remaining_life: ExplosionLifetime
+	})
+}
+
+method mut Explosion
+fn tick(context: *mut Context<Explosion>) {
+	println("ticking explosion")
+	self.remaining_life -= context.delta
+	if self.remaining_life <= 0 {
+		context.entity_system.explosion.remove(context.handle)
+	}
+
+	self.sprite.draw()
+}

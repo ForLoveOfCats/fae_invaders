@@ -1,6 +1,7 @@
 import faylib::Vec2
 import sprite::Sprite, Textures
 import entity_system::EntitySystem, Context
+import entities::explosion::Explosion
 
 struct Missile {
 	sprite: Sprite
@@ -30,6 +31,7 @@ fn tick(context: *mut Context<Missile>) {
 		if self.sprite.overlaps(enemy.entity.sprite) {
 			context.entity_system.enemy.remove(enemy.handle)
 			context.entity_system.missile.remove(context.handle)
+			Explosion.spawn(context.textures, context.entity_system, self.sprite.position)
 		}
 	}
 
@@ -38,6 +40,7 @@ fn tick(context: *mut Context<Missile>) {
 		if self.sprite.overlaps(bomb.entity.sprite) {
 			context.entity_system.bomb.remove(bomb.handle)
 			context.entity_system.missile.remove(context.handle)
+			Explosion.spawn(context.textures, context.entity_system, self.sprite.position)
 		}
 	}
 

@@ -6,6 +6,7 @@ struct Textures {
 	missile: Texture2D
 	enemy: Texture2D
 	bomb: Texture2D
+	explosion: Texture2D
 }
 
 method static Textures
@@ -17,6 +18,7 @@ fn load(): Textures {
 		missile: load_texture("./assets/missile.png".pointer)
 		enemy: load_texture("./assets/enemy.png".pointer)
 		bomb: load_texture("./assets/bomb.png".pointer)
+		explosion: load_texture("./assets/explosion.png".pointer)
 	}
 }
 
@@ -28,6 +30,7 @@ fn free() {
 	unload_texture(self.missile)
 	unload_texture(self.enemy)
 	unload_texture(self.bomb)
+	unload_texture(self.explosion)
 }
 
 struct Sprite {

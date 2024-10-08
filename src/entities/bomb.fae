@@ -2,6 +2,7 @@ import faylib::Vec2
 import sprite::Sprite, Textures
 import entity_system::EntitySystem, Context
 import scene::Scene
+import entities::explosion::Explosion
 
 struct Bomb {
 	sprite: Sprite
@@ -27,6 +28,7 @@ fn tick(context: *mut Context<Bomb>) {
 
 	if reached.bottom {
 		context.entity_system.bomb.remove(context.handle)
+		Explosion.spawn(context.textures, context.entity_system, self.sprite.position)
 
 		context.scene.shield_health -= 1
 		if context.scene.shield_health <= 0 {

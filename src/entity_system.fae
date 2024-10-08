@@ -7,6 +7,7 @@ import entities::player::Player
 import entities::missile::Missile
 import entities::enemy::Enemy
 import entities::bomb::Bomb
+import entities::explosion::Explosion
 
 const SlabSize = 10
 const MaxGeneration = 4294967295 // u32 max
@@ -283,6 +284,7 @@ struct EntitySystem {
 	missile: EntityList<Missile>
 	bomb: EntityList<Bomb>
 	enemy: EntityList<Enemy>
+	explosion: EntityList<Explosion>
 }
 
 method static EntitySystem
@@ -292,6 +294,7 @@ fn new(): EntitySystem {
 		missile: EntityList<Missile>.new()
 		bomb: EntityList<Bomb>.new()
 		enemy: EntityList<Enemy>.new()
+		explosion: EntityList<Explosion>.new()
 	}
 }
 
@@ -301,6 +304,7 @@ fn clear() {
 	self.missile.clear()
 	self.bomb.clear()
 	self.enemy.clear()
+	self.explosion.clear()
 }
 
 
@@ -310,6 +314,7 @@ fn free() {
 	self.missile.free()
 	self.bomb.free()
 	self.enemy.free()
+	self.explosion.free()
 }
 
 generic T
@@ -357,6 +362,7 @@ fn tick(scene_context: *mut scene::Context) {
 	self.missile.generation += 1
 	self.bomb.generation += 1
 	self.enemy.generation += 1
+	self.explosion.generation += 1
 
 	mut context = Context<Player>.new(scene_context, scene, self, self.player.&)
 	mut iterator = self.player.iterator()
@@ -381,6 +387,13 @@ fn tick(scene_context: *mut scene::Context) {
 
 	mut context = Context<Enemy>.new(scene_context, scene, self, self.enemy.&)
 	mut iterator = self.enemy.iterator()
+	while iterator.next() is entry: Some {
+		context.handle = entry.handle
+		entry.entity.tick(context.&mut)
+	}
+
+	mut context = Context<Explosion>.new(scene_context, scene, self, self.explosion.&)
+	mut iterator = self.explosion.iterator()
 	while iterator.next() is entry: Some {
 		context.handle = entry.handle
 		entry.entity.tick(context.&mut)
