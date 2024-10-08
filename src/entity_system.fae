@@ -60,6 +60,11 @@ fn free() {
 }
 
 method mut EntityList
+fn iterator(): EntityIterator<T> {
+	return EntityIterator<T> { list: self, index: 0 }
+}
+
+method mut EntityList
 fn push(entity: T): EntityHandle<T> {
 	self.live_count += 1
 
@@ -235,6 +240,39 @@ fn dump_debugging() {
 }
 
 generic T
+struct EntityIterator {
+	list: *mut EntityList<T>
+	index: isize
+}
+
+// I really really want anonymous structs....
+generic T
+struct EntityIteratorEntry {
+	entity: *mut T
+	handle: EntityHandle<T>
+}
+
+method mut EntityIterator
+fn next(): Option<EntityIteratorEntry<T>> {
+	while self.index < self.list.entities.items.length {
+		defer self.index += 1
+
+		let info = self.list.generations.get_unchecked(self.index)
+		if info.may_be_ticked(self.list.generation).! => continue
+
+		let entity = self.list.entities.get_mut_unchecked(self.index)
+		let handle = EntityHandle<T> {
+			index: self.index.(u32)
+			generation: info.added
+		}
+
+		return .Some(EntityIteratorEntry<T> { entity, handle })
+	}
+
+	return .None
+}
+
+generic T
 struct EntityHandle {
 	index: u32
 	generation: u32
@@ -286,6 +324,25 @@ struct Context {
 	handle: EntityHandle<T>
 }
 
+method static Context
+fn new(
+	scene_context: *mut scene::Context
+	scene: *mut Scene::InGame
+	entity_system: *mut EntitySystem
+	entity_list: *EntityList<T>
+): Context<T> {
+	return Context<T> {
+		viewport_size: scene_context.viewport_size
+		textures: scene_context.textures
+		entity_system
+		scene
+		scene_tracker: scene_context.scene_tracker
+		generation: entity_list.generation
+		delta: scene_context.delta
+		handle: EntityHandle<T> { index: 0, generation: 0 }
+	}
+}
+
 method mut EntitySystem
 fn tick(scene_context: *mut scene::Context) {
 	// Newly added entities are not ticked until the following frame
@@ -301,80 +358,32 @@ fn tick(scene_context: *mut scene::Context) {
 	self.bomb.generation += 1
 	self.enemy.generation += 1
 
-	for info, index in self.player.generations.items {
-		if info.may_be_ticked(self.player.generation).! => continue
-		mut context = Context<Player> {
-			viewport_size: scene_context.viewport_size
-			textures: scene_context.textures
-			entity_system: self
-			scene
-			scene_tracker: scene_context.scene_tracker
-			generation: self.player.generation
-			delta: scene_context.delta
-			handle: EntityHandle<Player> {
-				index: index.(u32),
-				generation: info.added
-			}
-		}
-
-		self.player.entities.items[index].tick(context.&mut)
+	mut context = Context<Player>.new(scene_context, scene, self, self.player.&)
+	mut iterator = self.player.iterator()
+	while iterator.next() is entry: Some {
+		context.handle = entry.handle
+		entry.entity.tick(context.&mut)
 	}
 
-	for info, index in self.missile.generations.items {
-		if info.may_be_ticked(self.missile.generation).! => continue
-		mut context = Context<Missile> {
-			viewport_size: scene_context.viewport_size
-			textures: scene_context.textures
-			entity_system: self
-			scene
-			scene_tracker: scene_context.scene_tracker
-			generation: self.missile.generation
-			delta: scene_context.delta
-			handle: EntityHandle<Missile> {
-				index: index.(u32),
-				generation: info.added
-			}
-		}
-
-		self.missile.entities.items[index].tick(context.&mut)
-	}
-	
-	for info, index in self.bomb.generations.items {
-		if info.may_be_ticked(self.bomb.generation).! => continue
-		mut context = Context<Bomb> {
-			viewport_size: scene_context.viewport_size
-			textures: scene_context.textures
-			entity_system: self
-			scene
-			scene_tracker: scene_context.scene_tracker
-			generation: self.bomb.generation
-			delta: scene_context.delta
-			handle: EntityHandle<Bomb> {
-				index: index.(u32),
-				generation: info.added
-			}
-		}
-
-		self.bomb.entities.items[index].tick(context.&mut)
+	mut context = Context<Missile>.new(scene_context, scene, self, self.missile.&)
+	mut iterator = self.missile.iterator()
+	while iterator.next() is entry: Some {
+		context.handle = entry.handle
+		entry.entity.tick(context.&mut)
 	}
 
-	for info, index in self.enemy.generations.items {
-		if info.may_be_ticked(self.enemy.generation).! => continue
-		mut context = Context<Enemy> {
-			viewport_size: scene_context.viewport_size
-			textures: scene_context.textures
-			entity_system: self
-			scene
-			scene_tracker: scene_context.scene_tracker
-			generation: self.enemy.generation
-			delta: scene_context.delta
-			handle: EntityHandle<Enemy> {
-				index: index.(u32),
-				generation: info.added
-			}
-		}
+	mut context = Context<Bomb>.new(scene_context, scene, self, self.bomb.&)
+	mut iterator = self.bomb.iterator()
+	while iterator.next() is entry: Some {
+		context.handle = entry.handle
+		entry.entity.tick(context.&mut)
+	}
 
-		self.enemy.entities.items[index].tick(context.&mut)
+	mut context = Context<Enemy>.new(scene_context, scene, self, self.enemy.&)
+	mut iterator = self.enemy.iterator()
+	while iterator.next() is entry: Some {
+		context.handle = entry.handle
+		entry.entity.tick(context.&mut)
 	}
 
 	// fae::io::terminal::clear()

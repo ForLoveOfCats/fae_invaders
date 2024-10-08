@@ -1,7 +1,6 @@
 import faylib::Vec2
 import sprite::Sprite, Textures
-import entity_system::EntitySystem, EntityHandle, Context
-import entities::player::Player
+import entity_system::EntitySystem, Context
 import scene::Scene
 
 struct Bomb {
@@ -36,16 +35,10 @@ fn tick(context: *mut Context<Bomb>) {
 		}
 	}
 
-	// This is dumb as hell and would *not* fly in a more complex project
-	for info, index in context.entity_system.player.generations.items {
-		if info.may_be_ticked(context.generation).! => continue
-
-		let player = context.entity_system.player.entities.get_ref(index)
-		if self.sprite.overlaps(player.sprite) {
-			let generation = context.entity_system.player.generations.items[index].added
-			let handle = EntityHandle<Player> { index: index.(u32), generation }
-			context.entity_system.player.remove(handle)
-
+	mut iterator = context.entity_system.player.iterator()
+	while iterator.next() is player: Some {
+		if self.sprite.overlaps(player.entity.sprite) {
+			context.entity_system.player.remove(player.handle)
 			context.entity_system.bomb.remove(context.handle)
 		}
 	}

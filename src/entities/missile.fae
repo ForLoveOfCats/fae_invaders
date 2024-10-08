@@ -1,8 +1,6 @@
 import faylib::Vec2
 import sprite::Sprite, Textures
-import entity_system::EntitySystem, EntityHandle, Context
-import entities::enemy::Enemy
-import entities::bomb::Bomb
+import entity_system::EntitySystem, Context
 
 struct Missile {
 	sprite: Sprite
@@ -27,29 +25,18 @@ fn tick(context: *mut Context<Missile>) {
 	let reached = self.sprite.move(context.viewport_size, distance)
 	if reached.top => context.entity_system.missile.remove(context.handle)
 
-	// This is dumb as hell and would *not* fly in a more complex project
-	for info, index in context.entity_system.enemy.generations.items {
-		if info.may_be_ticked(context.generation).! => continue
-
-		let enemy = context.entity_system.enemy.entities.get_ref(index)
-		if self.sprite.overlaps(enemy.sprite) {
-			let generation = context.entity_system.enemy.generations.items[index].added
-			let handle = EntityHandle<Enemy> { index: index.(u32), generation }
-			context.entity_system.enemy.remove(handle)
-
+	mut iterator = context.entity_system.enemy.iterator()
+	while iterator.next() is enemy: Some {
+		if self.sprite.overlaps(enemy.entity.sprite) {
+			context.entity_system.enemy.remove(enemy.handle)
 			context.entity_system.missile.remove(context.handle)
 		}
 	}
 
-	for info, index in context.entity_system.bomb.generations.items {
-		if info.may_be_ticked(context.generation).! => continue
-
-		let bomb = context.entity_system.bomb.entities.get_ref(index)
-		if self.sprite.overlaps(bomb.sprite) {
-			let generation = context.entity_system.bomb.generations.items[index].added
-			let handle = EntityHandle<Bomb> { index: index.(u32), generation }
-			context.entity_system.bomb.remove(handle)
-
+	mut iterator = context.entity_system.bomb.iterator()
+	while iterator.next() is bomb: Some {
+		if self.sprite.overlaps(bomb.entity.sprite) {
+			context.entity_system.bomb.remove(bomb.handle)
 			context.entity_system.missile.remove(context.handle)
 		}
 	}
