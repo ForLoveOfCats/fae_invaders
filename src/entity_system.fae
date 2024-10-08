@@ -2,6 +2,7 @@ import fae::collections::list::List
 
 import faylib::Vec2
 import sprite::Textures
+import scene::Scene, SceneTracker
 import entities::player::Player
 import entities::missile::Missile
 import entities::enemy::Enemy
@@ -278,7 +279,8 @@ struct Context {
 	viewport_size: Vec2
 	textures: *Textures
 	entity_system: *mut EntitySystem
-	scene_context: *mut scene::Context
+	scene: *mut Scene::InGame
+	scene_tracker: *mut SceneTracker
 	generation: u32
 	delta: f32
 	handle: EntityHandle<T>
@@ -288,6 +290,11 @@ method mut EntitySystem
 fn tick(scene_context: *mut scene::Context) {
 	// Newly added entities are not ticked until the following frame
 	// Removed entities are still ticked on the frame they are removed
+
+	let scene = match scene_context.scene_tracker.scene {
+		scene: InGame => yield scene.&mut
+		else => return
+	}
 
 	self.player.generation += 1
 	self.missile.generation += 1
@@ -300,7 +307,8 @@ fn tick(scene_context: *mut scene::Context) {
 			viewport_size: scene_context.viewport_size
 			textures: scene_context.textures
 			entity_system: self
-			scene_context
+			scene
+			scene_tracker: scene_context.scene_tracker
 			generation: self.player.generation
 			delta: scene_context.delta
 			handle: EntityHandle<Player> {
@@ -318,7 +326,8 @@ fn tick(scene_context: *mut scene::Context) {
 			viewport_size: scene_context.viewport_size
 			textures: scene_context.textures
 			entity_system: self
-			scene_context
+			scene
+			scene_tracker: scene_context.scene_tracker
 			generation: self.missile.generation
 			delta: scene_context.delta
 			handle: EntityHandle<Missile> {
@@ -336,7 +345,8 @@ fn tick(scene_context: *mut scene::Context) {
 			viewport_size: scene_context.viewport_size
 			textures: scene_context.textures
 			entity_system: self
-			scene_context
+			scene
+			scene_tracker: scene_context.scene_tracker
 			generation: self.bomb.generation
 			delta: scene_context.delta
 			handle: EntityHandle<Bomb> {
@@ -354,7 +364,8 @@ fn tick(scene_context: *mut scene::Context) {
 			viewport_size: scene_context.viewport_size
 			textures: scene_context.textures
 			entity_system: self
-			scene_context
+			scene
+			scene_tracker: scene_context.scene_tracker
 			generation: self.enemy.generation
 			delta: scene_context.delta
 			handle: EntityHandle<Enemy> {

@@ -2,7 +2,7 @@ import faylib::Color, Vec2
 import rectangle::Rectangle
 import sprite::Textures
 import entity_system::EntitySystem
-import scene::Scene, Context
+import scene::Scene, SceneTracker, Context
 import user_interface::UserInterface
 
 const TargetWidth = 900
@@ -26,6 +26,7 @@ fn main() {
 	defer entity_system.free()
 
 	mut scene = Scene::MainMenu.new()
+	mut scene_tracker = SceneTracker.new(scene.&mut)
 	mut user_interface = UserInterface.new()
 	defer user_interface.free()
 	mut context = Context {
@@ -33,7 +34,7 @@ fn main() {
 		entity_system: entity_system.&mut
 		user_interface: user_interface.&mut
 		font: faylib::get_default_font()
-		scene: scene.&mut
+		scene_tracker: scene_tracker.&mut
 		viewport_size
 		delta: 0
 	}
@@ -62,6 +63,8 @@ fn main() {
 			0
 			Color.white()
 		)
+
+		scene_tracker.handle_transition(context.&mut)
 	}
 }
 

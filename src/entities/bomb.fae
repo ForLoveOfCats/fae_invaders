@@ -26,13 +26,13 @@ fn tick(context: *mut Context<Bomb>) {
 	let distance = Vec2 { x: 0, y: speed }
 	let reached = self.sprite.move(context.viewport_size, distance)
 
-	if reached.bottom and context.scene_context.scene is scene: InGame {
+	if reached.bottom {
 		context.entity_system.bomb.remove(context.handle)
 
-		scene.shield_health -= 1
-		if scene.shield_health <= 0 {
+		context.scene.shield_health -= 1
+		if context.scene.shield_health <= 0 {
 			let reason = "The Shield Was Detroyed!"
-			context.scene_context.transition(Scene::Lost.new(reason))
+			context.scene_tracker.transition(Scene::Lost.new(reason))
 		}
 	}
 

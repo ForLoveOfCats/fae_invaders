@@ -39,22 +39,42 @@ fn tick(context: *mut Context) {
 	context.entity_system.tick(context)
 }
 
+struct SceneTracker {
+	scene: *mut Scene
+	next_scene: Option<Scene> internal
+}
+
+method static SceneTracker
+fn new(scene: *mut Scene): SceneTracker {
+	return SceneTracker { scene, next_scene: .None }
+}
+
+method mut SceneTracker
+fn transition(to: Scene) {
+	self.next_scene = .Some(to)
+}
+
+method mut SceneTracker
+fn handle_transition(context: *mut Context) {
+	if self.next_scene is next: Some {
+		context.entity_system.clear()
+		context.user_interface.clear()
+
+		self.scene.* = next
+		self.scene.transitioned(context)
+
+		self.next_scene = .None
+	}
+}
+
 struct Context {
 	textures: *Textures
 	entity_system: *mut EntitySystem
 	user_interface: *mut UserInterface
 	font: Font
-	scene: *mut Scene
+	scene_tracker: *mut SceneTracker
 	viewport_size: Vec2
 	delta: f32
-}
-
-method mut Context
-fn transition(to: Scene) {
-	self.entity_system.clear()
-	self.user_interface.clear()
-	self.scene.* = to
-	self.scene.transitioned(self)
 }
 
 method static Scene::MainMenu
@@ -75,7 +95,7 @@ fn transitioned(context: *mut Context) {
 method mut Scene::MainMenu
 fn tick(context: *mut Context) {
 	if self.start {
-		context.transition(Scene::DifficultySelector.new())
+		context.scene_tracker.transition(Scene::DifficultySelector.new())
 	}
 }
 
@@ -111,9 +131,9 @@ fn transitioned(context: *mut Context) {
 
 method mut Scene::DifficultySelector
 fn tick(context: *mut Context) {
-	if self.one => context.transition(Scene::InGame.new(1))
-	else if self.two => context.transition(Scene::InGame.new(2))
-	else if self.three => context.transition(Scene::InGame.new(3))
+	if self.one => context.scene_tracker.transition(Scene::InGame.new(1))
+	else if self.two => context.scene_tracker.transition(Scene::InGame.new(2))
+	else if self.three => context.scene_tracker.transition(Scene::InGame.new(3))
 }
 
 
@@ -151,12 +171,12 @@ fn tick(context: *mut Context) {
 
 	if context.entity_system.player.all_dead() {
 		let reason = "You Died!"
-		context.transition(Scene::Lost.new(reason))
+		context.scene_tracker.transition(Scene::Lost.new(reason))
 		return
 	}
 
 	if context.entity_system.enemy.all_dead() {
-		context.transition(Scene::Won.new())
+		context.scene_tracker.transition(Scene::Won.new())
 		return
 	}
 
@@ -194,7 +214,7 @@ fn tick(context: *mut Context) {
 		self.setup_ui(context, false)
 	}
 
-	if self.ok => context.transition(Scene::MainMenu.new())
+	if self.ok => context.scene_tracker.transition(Scene::MainMenu.new())
 }
 
 method mut Scene::Lost
@@ -228,7 +248,7 @@ fn tick(context: *mut Context) {
 		self.setup_ui(context, false)
 	}
 
-	if self.ok => context.transition(Scene::MainMenu.new())
+	if self.ok => context.scene_tracker.transition(Scene::MainMenu.new())
 }
 
 method mut Scene::Won
