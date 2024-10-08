@@ -41,9 +41,7 @@ fn tick(context: *mut Context<Player>) {
 
 	if self.velocity.x < 0 => self.velocity.x = (self.velocity.x + drag).min(0)
 	if self.velocity.x > 0 => self.velocity.x = (self.velocity.x - drag).max(0)
-
-	if self.velocity.x < -TopSpeed => self.velocity.x = -TopSpeed
-	if self.velocity.x > TopSpeed => self.velocity.x = TopSpeed
+	self.velocity.x = self.velocity.x.max(-TopSpeed).min(TopSpeed)
 
 	let distance = Vec2 { x: self.velocity.x * context.delta, y: 0 }
 	self.sprite.move(context.viewport_size, distance)
