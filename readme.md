@@ -6,7 +6,7 @@ A space invaders inspired demo game built in the [Fae programming language](http
 
 ## Building
 
-This game only builds on *Linux* and requires Fae `0.0.1-44b1f96` to build which is not yet available pre-built.
+This game only builds on *Linux* and can build with Fae `0.0.1-582ed7a-bunded` which is [available here](https://github.com/ForLoveOfCats/fae/releases/tag/2024-October-13).
 
 Assuming an appropriate Fae version and on Linux:
 - Run `./meta/fetch_raylib.py`
