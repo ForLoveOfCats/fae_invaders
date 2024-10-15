@@ -20,7 +20,7 @@ fn spawn(textures: *Textures, sounds: *mut Sounds, entity_system: *mut EntitySys
 		remaining_life: ExplosionLifetime
 	})
 
-	sounds.play(sounds.explosion)
+	sounds.explosion.play()
 }
 
 method mut Explosion

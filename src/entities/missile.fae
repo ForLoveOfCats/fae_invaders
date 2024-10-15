@@ -17,7 +17,7 @@ fn fire(textures: *Textures, sounds: *mut Sounds, entity_system: *mut EntitySyst
 		}
 	})
 
-	sounds.play(sounds.missile_fire)
+	sounds.missile_fire.play()
 }
 
 method mut Missile
