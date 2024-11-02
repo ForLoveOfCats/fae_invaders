@@ -1,7 +1,7 @@
-import faylib::Vec2
-import sprite::Sprite, Textures
-import entity_system::EntitySystem, Context
-import entities::missile::Missile
+import faylib.Vec2
+import sprite.Sprite, Textures
+import entity_system.EntitySystem, Context
+import entities.missile.Missile
 
 struct Player {
 	sprite: Sprite
@@ -26,7 +26,7 @@ fn spawn(textures: *Textures, entity_system: *mut EntitySystem, viewport_size: V
 
 method mut Player
 fn tick(context: *mut Context<Player>) {
-	import faylib::is_key_down
+	import faylib.is_key_down
 
 	const TopSpeed = 600 // Pixels per second
 	const Acceleration = 900 // Pixels per second per second
@@ -36,8 +36,8 @@ fn tick(context: *mut Context<Player>) {
 	let drag = Drag * context.delta
 	let acceleration = Acceleration * context.delta
 
-	if is_key_down(key::A) => self.velocity.x -= acceleration + drag
-	if is_key_down(key::D) => self.velocity.x += acceleration + drag
+	if is_key_down(key.A) => self.velocity.x -= acceleration + drag
+	if is_key_down(key.D) => self.velocity.x += acceleration + drag
 
 	if self.velocity.x < 0 => self.velocity.x = (self.velocity.x + drag).min(0)
 	if self.velocity.x > 0 => self.velocity.x = (self.velocity.x - drag).max(0)
@@ -47,9 +47,9 @@ fn tick(context: *mut Context<Player>) {
 	self.sprite.move(context.viewport_size, distance)
 
 	self.fire_delay -= context.delta
-	if self.fire_delay <= 0 and user_interface::is_fire_pressed() {
+	if self.fire_delay <= 0 and user_interface.is_fire_pressed() {
 		let half_height = self.sprite.texture.height.(f32) / 2
-		let random = faylib::get_random_value(-8, 8).(f32)
+		let random = faylib.get_random_value(-8, 8).(f32)
 		let position = Vec2 {
 			x: self.sprite.position.x + random
 			y: self.sprite.position.y - half_height

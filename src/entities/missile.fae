@@ -1,8 +1,8 @@
-import faylib::Vec2
-import sprite::Sprite, Textures
-import sound::Sounds
-import entity_system::EntitySystem, Context
-import entities::explosion::Explosion
+import faylib.Vec2
+import sprite.Sprite, Textures
+import sound.Sounds
+import entity_system.EntitySystem, Context
+import entities.explosion.Explosion
 
 struct Missile {
 	sprite: Sprite

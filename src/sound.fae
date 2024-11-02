@@ -1,23 +1,23 @@
-import fae::collections::list::List
+import fae.collections.list.List
 
 struct SoundEffect {
-	sound: faylib::Sound
-	available_aliases: List<faylib::Sound> internal
-	busy_aliases: List<faylib::Sound> internal
+	sound: faylib.Sound
+	available_aliases: List<faylib.Sound> internal
+	busy_aliases: List<faylib.Sound> internal
 }
 
 method static SoundEffect
 fn load(path: str): SoundEffect {
 	return SoundEffect {
-		sound: faylib::load_sound(path.pointer)
-		available_aliases: List<faylib::Sound>.new()
-		busy_aliases: List<faylib::Sound>.new()
+		sound: faylib.load_sound(path.pointer)
+		available_aliases: List<faylib.Sound>.new()
+		busy_aliases: List<faylib.Sound>.new()
 	}
 }
 
 method mut SoundEffect
 fn free() {
-	for alias in self.busy_aliases.items => faylib::stop_sound(alias)
+	for alias in self.busy_aliases.items => faylib.stop_sound(alias)
 
 	// Don't unload the sound or aliases to avoid hitting what appears to be
 	// a race condition with raylib's audio thread where the main thread shows
@@ -37,7 +37,7 @@ fn tick() {
 		defer index -= 1
 
 		let alias = self.busy_aliases.items[index]
-		if faylib::is_sound_playing(alias) => break
+		if faylib.is_sound_playing(alias) => break
 
 		self.busy_aliases.truncate(index)
 		self.available_aliases.push(alias)
@@ -48,10 +48,10 @@ method mut SoundEffect
 fn play() {
 	let alias = match self.available_aliases.pop() {
 		alias: Some => yield alias
-		None => yield faylib::load_sound_alias(self.sound)
+		None => yield faylib.load_sound_alias(self.sound)
 	}
 
-	faylib::play_sound(alias)
+	faylib.play_sound(alias)
 	self.busy_aliases.insert(alias, 0)
 }
 

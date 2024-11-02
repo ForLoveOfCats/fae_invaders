@@ -1,7 +1,7 @@
-import fae::collections::list::List
+import fae.collections.list.List
 
-import faylib::Color, Vec2, draw_rectangle
-import rectangle::Rectangle
+import faylib.Color, Vec2, draw_rectangle
+import rectangle.Rectangle
 
 const Height = 34
 const Width = 380
@@ -20,20 +20,20 @@ enum Item {
 	}
 }
 
-method static Item::Button
+method static Item.Button
 fn new(text: str, pressed: *mut bool): Item {
 	return .Button { disabled: false, text, pressed }
 }
 
 method mut Item
-fn tick(scene_context: *mut scene::Context, rectangle: Rectangle, selected: bool) {
+fn tick(scene_context: *mut scene.Context, rectangle: Rectangle, selected: bool) {
 	match self {
 		Button {
 			draw_rectangle(rectangle, Color.rgb(200, 200, 200))
 
 			const TextOffset = SelectionInset + SelectionWidth + SelectionInset
 			let position = Vec2 { x: rectangle.x + TextOffset, y: rectangle.y + 8 }
-			faylib::draw_text(scene_context.font, self.text.pointer, position, 20, 2, Color.black())
+			faylib.draw_text(scene_context.font, self.text.pointer, position, 20, 2, Color.black())
 
 			if self.disabled == true => return
 			if selected and is_fire_pressed() => self.pressed.* = true
@@ -105,11 +105,11 @@ fn push(item: Item) {
 }
 
 method mut UserInterface
-fn tick(scene_context: *mut scene::Context) {
-	import faylib::is_key_pressed
+fn tick(scene_context: *mut scene.Context) {
+	import faylib.is_key_pressed
 
-	if is_key_pressed(key::W) => self.selection -= 1
-	if is_key_pressed(key::S) => self.selection += 1
+	if is_key_pressed(key.W) => self.selection -= 1
+	if is_key_pressed(key.S) => self.selection += 1
 	self.selection = self.selection.min(self.items.length() - 1).max(0)
 
 	let items_height = Height * self.items.length().(f32)
@@ -123,7 +123,7 @@ fn tick(scene_context: *mut scene::Context) {
 	let x = center_x - Width / 2
 
 	if self.heading.length > 0 {
-		faylib::draw_text(
+		faylib.draw_text(
 			scene_context.font
 			self.heading.pointer
 			Vec2 { x: x + 5, y: top - Padding - 24 }
@@ -158,8 +158,8 @@ fn tick(scene_context: *mut scene::Context) {
 }
 
 fn is_fire_pressed(): bool {
-	for key in []i32 { key::Enter, key::Space, key::K } {
-		if faylib::is_key_pressed(key) => return true
+	for key in []i32 { key.Enter, key.Space, key.K } {
+		if faylib.is_key_pressed(key) => return true
 	}
 
 	return false

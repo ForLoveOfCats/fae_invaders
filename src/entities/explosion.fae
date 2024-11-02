@@ -1,7 +1,7 @@
-import faylib::Vec2
-import sprite::Sprite, Textures
-import sound::Sounds
-import entity_system::EntitySystem, Context
+import faylib.Vec2
+import sprite.Sprite, Textures
+import sound.Sounds
+import entity_system.EntitySystem, Context
 
 const ExplosionLifetime = 0.08
 

@@ -1,4 +1,4 @@
-import faylib::Vec2
+import faylib.Vec2
 
 struct Rectangle {
 	x: f32

@@ -1,9 +1,8 @@
-import faylib::Vec2
-import sprite::Sprite, Textures
-import sound::Sounds
-import entity_system::EntitySystem, Context
-import scene::Scene
-import entities::explosion::Explosion
+import faylib.Vec2
+import sprite.Sprite, Textures
+import sound.Sounds
+import entity_system.EntitySystem, Context
+import entities.explosion.Explosion
 
 struct Bomb {
 	sprite: Sprite
@@ -38,7 +37,7 @@ fn tick(context: *mut Context<Bomb>) {
 
 		if context.scene.shield_health <= 0 {
 			let reason = "The Shield Was Detroyed!"
-			context.scene_tracker.transition(Scene::Lost.new(reason))
+			context.scene_tracker.transition(.Lost.new(reason))
 		}
 	}
 

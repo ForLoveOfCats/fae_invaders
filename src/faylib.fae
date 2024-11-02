@@ -1,4 +1,4 @@
-import rectangle::Rectangle
+import rectangle.Rectangle
 
 const LogAll = 0
 const LogTrace = 1

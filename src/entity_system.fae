@@ -1,16 +1,15 @@
-import fae::collections::list::List
+import fae.collections.list.List
 
-import faylib::Vec2
-import sprite::Textures
-import sound::Sounds
-import scene::Scene, SceneTracker
-import entities::player::Player
-import entities::missile::Missile
-import entities::enemy::Enemy
-import entities::bomb::Bomb
-import entities::explosion::Explosion
+import faylib.Vec2
+import sprite.Textures
+import sound.Sounds
+import scene.Scene, SceneTracker
+import entities.player.Player
+import entities.missile.Missile
+import entities.enemy.Enemy
+import entities.bomb.Bomb
+import entities.explosion.Explosion
 
-const SlabSize = 10
 const MaxGeneration = 4294967295 // u32 max
 
 // TODO: Make fields internal once language has traits
@@ -324,7 +323,7 @@ struct Context {
 	textures: *Textures
 	sounds: *mut Sounds
 	entity_system: *mut EntitySystem
-	scene: *mut Scene::InGame
+	scene: *mut Scene.InGame
 	scene_tracker: *mut SceneTracker
 	generation: u32
 	delta: f32
@@ -333,8 +332,8 @@ struct Context {
 
 method static Context
 fn new(
-	scene_context: *mut scene::Context
-	scene: *mut Scene::InGame
+	scene_context: *mut scene.Context
+	scene: *mut Scene.InGame
 	entity_system: *mut EntitySystem
 	entity_list: *EntityList<T>
 ): Context<T> {
@@ -352,7 +351,7 @@ fn new(
 }
 
 method mut EntitySystem
-fn tick(scene_context: *mut scene::Context) {
+fn tick(scene_context: *mut scene.Context) {
 	// Newly added entities are not ticked until the following frame
 	// Removed entities are still ticked on the frame they are removed
 
@@ -402,6 +401,6 @@ fn tick(scene_context: *mut scene::Context) {
 		entry.entity.tick(context.&mut)
 	}
 
-	// fae::io::terminal::clear()
+	// fae.io.terminal.clear()
 	// self.missile.dump_debugging()
 }

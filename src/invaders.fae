@@ -1,32 +1,32 @@
-import faylib::Color, Vec2
-import rectangle::Rectangle
-import sprite::Textures
-import sound::Sounds
-import entity_system::EntitySystem
-import scene::Scene, SceneTracker, Context
-import user_interface::UserInterface
+import faylib.Color, Vec2
+import rectangle.Rectangle
+import sprite.Textures
+import sound.Sounds
+import entity_system.EntitySystem
+import scene.Scene, SceneTracker, Context
+import user_interface.UserInterface
 
 const TargetWidth = 900
 const TargetHeight = 680
 const MinFrameRate = 60
 
 fn main() {
-	faylib::set_trace_log_level(faylib::LogWarning)
+	faylib.set_trace_log_level(faylib.LogWarning)
 	seed_random()
 	let scale = set_up_window()
 	let viewport_size = Vec2 { x: TargetWidth, y: TargetHeight }
 
-	let render_texture = faylib::load_render_texture(TargetWidth, TargetHeight)
-	defer faylib::unload_render_texture(render_texture)
-	faylib::set_texture_filter(render_texture.texture, faylib::TextureFilterPoint)
+	let render_texture = faylib.load_render_texture(TargetWidth, TargetHeight)
+	defer faylib.unload_render_texture(render_texture)
+	faylib.set_texture_filter(render_texture.texture, faylib.TextureFilterPoint)
 
 	let textures = Textures.load()
 	defer textures.free()
 
-	faylib::init_audio_device()
-	if faylib::is_audio_device_ready().! => panicf("Audio device could not be initialized")
-	defer faylib::close_audio_device()
-	faylib::set_master_volume(0.5)
+	faylib.init_audio_device()
+	if faylib.is_audio_device_ready().! => panicf("Audio device could not be initialized")
+	defer faylib.close_audio_device()
+	faylib.set_master_volume(0.5)
 
 	mut sounds = Sounds.load()
 	defer sounds.free()
@@ -34,7 +34,7 @@ fn main() {
 	mut entity_system = EntitySystem.new()
 	defer entity_system.free()
 
-	mut scene = Scene::MainMenu.new()
+	mut scene = Scene.MainMenu.new()
 	mut scene_tracker = SceneTracker.new(scene.&mut)
 	mut user_interface = UserInterface.new()
 	defer user_interface.free()
@@ -43,7 +43,7 @@ fn main() {
 		sounds: sounds.&mut
 		entity_system: entity_system.&mut
 		user_interface: user_interface.&mut
-		font: faylib::get_default_font()
+		font: faylib.get_default_font()
 		scene_tracker: scene_tracker.&mut
 		viewport_size
 		delta: 0
@@ -51,19 +51,19 @@ fn main() {
 
 	scene.transitioned(context.&mut)
 
-	while faylib::window_should_close().! {
-		context.delta = faylib::get_frame_time()
-		faylib::begin_drawing()
+	while faylib.window_should_close().! {
+		context.delta = faylib.get_frame_time()
+		faylib.begin_drawing()
 
-		faylib::begin_texture_mode(render_texture)
-		faylib::clear_background(Color.white())
+		faylib.begin_texture_mode(render_texture)
+		faylib.clear_background(Color.white())
 		scene.tick(context.&mut)
-		faylib::end_texture_mode()
+		faylib.end_texture_mode()
 
-		faylib::clear_background(Color.white())
+		faylib.clear_background(Color.white())
 		let target_width = render_texture.texture.width.(f32)
 		let target_height = render_texture.texture.height.(f32)
-		faylib::draw_texture_pro(
+		faylib.draw_texture_pro(
 			render_texture.texture
 			Rectangle { x: 0, y: 0, width: target_width, height: -target_height }
 			Rectangle { x: 0, y: 0, width: target_width * scale, height: target_height * scale }
@@ -72,26 +72,26 @@ fn main() {
 			Color.white()
 		)
 
-		faylib::end_drawing()
+		faylib.end_drawing()
 		scene_tracker.handle_transition(context.&mut)
 		sounds.tick()
 	}
 }
 
 fn seed_random() {
-	import fae::libc::TimeT, time
+	import fae.libc.TimeT, time
 
 	let null = null_pointer<TimeT>()
 	let seed = time(null).time_t.(u32)
-	faylib::set_random_seed(seed)
+	faylib.set_random_seed(seed)
 }
 
 fn set_up_window(): f32 {
-	faylib::init_window(TargetWidth, TargetHeight, "Fae Invaders".pointer)
+	faylib.init_window(TargetWidth, TargetHeight, "Fae Invaders".pointer)
 
-	let monitor = faylib::get_current_monitor()
-	let width = faylib::get_monitor_width(monitor)
-	let height = faylib::get_monitor_height(monitor)
+	let monitor = faylib.get_current_monitor()
+	let width = faylib.get_monitor_width(monitor)
+	let height = faylib.get_monitor_height(monitor)
 
 	let scale: i32 = if width > TargetWidth * 3 and height > TargetHeight * 3 {
 		yield 3
@@ -102,17 +102,17 @@ fn set_up_window(): f32 {
 	}
 	println(f"Chose a scale factor of {scale}")
 
-	faylib::set_window_size(TargetWidth * scale, TargetHeight * scale)
+	faylib.set_window_size(TargetWidth * scale, TargetHeight * scale)
 	println(f"Set window size of {TargetWidth * scale}x{TargetHeight * scale}")
 
 	// This would not work on Wayland, good thing Raylib/GLFW still uses X11/Xwayland 😅
 	let x = width / 2 - TargetWidth * scale / 2
 	let y = height / 2 - TargetHeight * scale / 2
-	faylib::set_window_position(x, y)
+	faylib.set_window_position(x, y)
 
-	mut refresh_rate = faylib::get_monitor_refresh_rate(monitor)
+	mut refresh_rate = faylib.get_monitor_refresh_rate(monitor)
 	if refresh_rate < MinFrameRate => refresh_rate = MinFrameRate
-	faylib::set_target_fps(refresh_rate)
+	faylib.set_target_fps(refresh_rate)
 	println(f"Set refresh rate of {refresh_rate}hz")
 
 	return scale.(f32)
