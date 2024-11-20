@@ -11,7 +11,7 @@ struct Explosion {
 }
 
 method static Explosion
-fn spawn(textures: *Textures, sounds: *mut Sounds, entity_system: *mut EntitySystem, position: Vec2) {
+fn spawn(textures=: *Textures, sounds=: *mut Sounds, entity_system=: *mut EntitySystem, position: Vec2) {
 	entity_system.explosion.push(Explosion {
 		sprite: Sprite {
 			texture: textures.explosion.&

@@ -16,7 +16,7 @@ fn main() {
 	let scale = set_up_window()
 	let viewport_size = Vec2 { x: TargetWidth, y: TargetHeight }
 
-	let render_texture = faylib.load_render_texture(TargetWidth, TargetHeight)
+	let render_texture = faylib.load_render_texture(width: TargetWidth, height: TargetHeight)
 	defer faylib.unload_render_texture(render_texture)
 	faylib.set_texture_filter(render_texture.texture, faylib.TextureFilterPoint)
 
@@ -55,7 +55,7 @@ fn main() {
 		context.delta = faylib.get_frame_time()
 		faylib.begin_drawing()
 
-		faylib.begin_texture_mode(render_texture)
+		faylib.begin_texture_mode(target: render_texture)
 		faylib.clear_background(Color.white())
 		scene.tick(context.&mut)
 		faylib.end_texture_mode()
@@ -65,11 +65,11 @@ fn main() {
 		let target_height = render_texture.texture.height.(f32)
 		faylib.draw_texture_pro(
 			render_texture.texture
-			Rectangle { x: 0, y: 0, width: target_width, height: -target_height }
-			Rectangle { x: 0, y: 0, width: target_width * scale, height: target_height * scale }
-			Vec2.zero()
-			0
-			Color.white()
+			source: Rectangle { x: 0, y: 0, width: target_width, height: -target_height }
+			destination: Rectangle { x: 0, y: 0, width: target_width * scale, height: target_height * scale }
+			origin: Vec2.zero()
+			rotation: 0
+			tint: Color.white()
 		)
 
 		faylib.end_drawing()
@@ -87,7 +87,7 @@ fn seed_random() {
 }
 
 fn set_up_window(): f32 {
-	faylib.init_window(TargetWidth, TargetHeight, "Fae Invaders".pointer)
+	faylib.init_window(width: TargetWidth, height: TargetHeight, title: "Fae Invaders".pointer)
 
 	let monitor = faylib.get_current_monitor()
 	let width = faylib.get_monitor_width(monitor)
@@ -102,7 +102,7 @@ fn set_up_window(): f32 {
 	}
 	println(f"Chose a scale factor of {scale}")
 
-	faylib.set_window_size(TargetWidth * scale, TargetHeight * scale)
+	faylib.set_window_size(width: TargetWidth * scale, height: TargetHeight * scale)
 	println(f"Set window size of {TargetWidth * scale}x{TargetHeight * scale}")
 
 	// This would not work on Wayland, good thing Raylib/GLFW still uses X11/Xwayland 😅

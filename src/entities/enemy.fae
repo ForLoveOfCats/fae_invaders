@@ -22,7 +22,7 @@ enum Direction {
 }
 
 method static Enemy
-fn spawn(textures: *Textures, entity_system: *mut EntitySystem, position: Vec2, direction: Direction) {
+fn spawn(textures=: *Textures, entity_system=: *mut EntitySystem, position: Vec2, direction: Direction) {
 	entity_system.enemy.push(Enemy {
 		sprite: Sprite {
 			texture: textures.enemy.&
@@ -94,7 +94,7 @@ fn tick(context: *mut Context<Enemy>) {
 		let rounded_upper = upper.round().(i32).max(1)
 
 		if faylib.get_random_value(1, rounded_upper) == 1 {
-			Bomb.fire(context.textures, context.sounds, context.entity_system, self.sprite.position)
+			Bomb.fire(context.textures, context.sounds, context.entity_system, position: self.sprite.position)
 		}
 	}
 

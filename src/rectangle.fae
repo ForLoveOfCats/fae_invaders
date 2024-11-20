@@ -8,14 +8,14 @@ struct Rectangle {
 }
 
 method Rectangle
-fn contains(point: Vec2): bool {
+fn contains(point=: Vec2): bool {
 	let within_x = self.x <= point.x and point.x <= self.x + self.width
 	let within_y = self.y <= point.y and point.y <= self.y + self.height
 	return within_x and within_y
 }
 
 method Rectangle
-fn overlaps(other: Rectangle): bool {
+fn overlaps(other=: Rectangle): bool {
 	let a = self.contains(Vec2 { x: other.x, y: other.y })
 	let b = self.contains(Vec2 { x: other.x + other.width, y: other.y })
 	let c = self.contains(Vec2 { x: other.x + other.width, y: other.y + other.height })

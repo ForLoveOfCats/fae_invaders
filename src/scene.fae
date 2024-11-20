@@ -16,7 +16,7 @@ enum Scene {
 }
 
 method mut Scene
-fn transitioned(context: *mut Context) {
+fn transitioned(context=: *mut Context) {
 	match self {
 		MainMenu => self.transitioned(context)
 		DifficultySelector => self.transitioned(context)
@@ -27,7 +27,7 @@ fn transitioned(context: *mut Context) {
 }
 
 method mut Scene
-fn tick(context: *mut Context) {
+fn tick(context=: *mut Context) {
 	match self {
 		MainMenu => self.tick(context)
 		DifficultySelector => self.tick(context)
@@ -46,7 +46,7 @@ struct SceneTracker {
 }
 
 method static SceneTracker
-fn new(scene: *mut Scene): SceneTracker {
+fn new(scene=: *mut Scene): SceneTracker {
 	return SceneTracker { scene, next_scene: .None }
 }
 
@@ -56,7 +56,7 @@ fn transition(to: Scene) {
 }
 
 method mut SceneTracker
-fn handle_transition(context: *mut Context) {
+fn handle_transition(context=: *mut Context) {
 	if self.next_scene is next: Some {
 		context.entity_system.clear()
 		context.user_interface.clear()
@@ -97,7 +97,7 @@ fn transitioned(context: *mut Context) {
 method mut Scene.MainMenu
 fn tick(context: *mut Context) {
 	if self.start {
-		context.scene_tracker.transition(Scene.DifficultySelector.new())
+		context.scene_tracker.transition(to: .DifficultySelector.new())
 	}
 }
 
@@ -133,9 +133,9 @@ fn transitioned(context: *mut Context) {
 
 method mut Scene.DifficultySelector
 fn tick(context: *mut Context) {
-	if self.one => context.scene_tracker.transition(.InGame.new(1))
-	else if self.two => context.scene_tracker.transition(.InGame.new(2))
-	else if self.three => context.scene_tracker.transition(.InGame.new(3))
+	if self.one => context.scene_tracker.transition(to: .InGame.new(difficulty: 1))
+	else if self.two => context.scene_tracker.transition(to: .InGame.new(difficulty: 2))
+	else if self.three => context.scene_tracker.transition(to: .InGame.new(difficulty: 3))
 }
 
 
@@ -167,7 +167,7 @@ fn transitioned(context: *mut Context) {
 	}
 
 	self.initial_enemy_count = initial_enemy_count
-	Player.spawn(context.textures, context.entity_system, context.viewport_size)
+	Player.spawn(context.textures, context.entity_system, viewport_size: context.viewport_size)
 }
 
 method mut Scene.InGame
@@ -176,12 +176,12 @@ fn tick(context: *mut Context) {
 
 	if context.entity_system.player.all_dead() {
 		let reason = "You Died!"
-		context.scene_tracker.transition(.Lost.new(reason))
+		context.scene_tracker.transition(to: .Lost.new(reason))
 		return
 	}
 
 	if context.entity_system.enemy.all_dead() {
-		context.scene_tracker.transition(.Won.new())
+		context.scene_tracker.transition(to: .Won.new())
 		return
 	}
 
@@ -204,22 +204,22 @@ fn new(reason: str): Scene {
 	return .Lost {
 		reason
 		ok: false
-		timer: Timer.new(GameEndDelay)
+		timer: Timer.new(delay: GameEndDelay)
 	}
 }
 
 method mut Scene.Lost
 fn transitioned(context: *mut Context) {
-	self.setup_ui(context, true)
+	self.setup_ui(context, disabled: true)
 }
 
 method mut Scene.Lost
 fn tick(context: *mut Context) {
-	if self.timer.tick(context.delta) is Fired {
-		self.setup_ui(context, false)
+	if self.timer.tick(delta: context.delta) is Fired {
+		self.setup_ui(context, disabled: false)
 	}
 
-	if self.ok => context.scene_tracker.transition(.MainMenu.new())
+	if self.ok => context.scene_tracker.transition(to: .MainMenu.new())
 }
 
 method mut Scene.Lost
@@ -238,22 +238,22 @@ method static Scene.Won
 fn new(): Scene {
 	return .Won {
 		ok: false
-		timer: Timer.new(GameEndDelay)
+		timer: Timer.new(delay: GameEndDelay)
 	}
 }
 
 method mut Scene.Won
 fn transitioned(context: *mut Context) {
-	self.setup_ui(context, true)
+	self.setup_ui(context, disabled: true)
 }
 
 method mut Scene.Won
 fn tick(context: *mut Context) {
-	if self.timer.tick(context.delta) is Fired {
-		self.setup_ui(context, false)
+	if self.timer.tick(delta: context.delta) is Fired {
+		self.setup_ui(context, disabled: false)
 	}
 
-	if self.ok => context.scene_tracker.transition(.MainMenu.new())
+	if self.ok => context.scene_tracker.transition(to: .MainMenu.new())
 }
 
 method mut Scene.Won

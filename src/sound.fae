@@ -7,7 +7,7 @@ struct SoundEffect {
 }
 
 method static SoundEffect
-fn load(path: str): SoundEffect {
+fn load(path=: str): SoundEffect {
 	return SoundEffect {
 		sound: faylib.load_sound(path.pointer)
 		available_aliases: List<faylib.Sound>.new()
@@ -39,7 +39,7 @@ fn tick() {
 		let alias = self.busy_aliases.items[index]
 		if faylib.is_sound_playing(alias) => break
 
-		self.busy_aliases.truncate(index)
+		self.busy_aliases.truncate(to: index)
 		self.available_aliases.push(alias)
 	}
 }
@@ -52,7 +52,7 @@ fn play() {
 	}
 
 	faylib.play_sound(alias)
-	self.busy_aliases.insert(alias, 0)
+	self.busy_aliases.insert(alias, at: 0)
 }
 
 method SoundEffect

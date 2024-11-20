@@ -9,7 +9,7 @@ struct Missile {
 }
 
 method static Missile
-fn fire(textures: *Textures, sounds: *mut Sounds, entity_system: *mut EntitySystem, position: Vec2) {
+fn fire(textures=: *Textures, sounds=: *mut Sounds, entity_system=: *mut EntitySystem, position: Vec2) {
 	entity_system.missile.push(Missile {
 		sprite: Sprite {
 			texture: textures.missile.&
@@ -26,7 +26,7 @@ fn tick(context: *mut Context<Missile>) {
 
 	let speed = Speed * context.delta
 	let distance = Vec2 { x: 0, y: -speed }
-	let reached = self.sprite.move(context.viewport_size, distance)
+	let reached = self.sprite.move(viewport_size: context.viewport_size, distance)
 	if reached.top => context.entity_system.missile.remove(context.handle)
 
 	mut iterator = context.entity_system.enemy.iterator()
@@ -34,7 +34,8 @@ fn tick(context: *mut Context<Missile>) {
 		if self.sprite.overlaps(enemy.entity.sprite) {
 			context.entity_system.enemy.remove(enemy.handle)
 			context.entity_system.missile.remove(context.handle)
-			Explosion.spawn(context.textures, context.sounds, context.entity_system, enemy.entity.sprite.position)
+			let position = enemy.entity.sprite.position
+			Explosion.spawn(context.textures, context.sounds, context.entity_system, position)
 		}
 	}
 
@@ -43,7 +44,8 @@ fn tick(context: *mut Context<Missile>) {
 		if self.sprite.overlaps(bomb.entity.sprite) {
 			context.entity_system.bomb.remove(bomb.handle)
 			context.entity_system.missile.remove(context.handle)
-			Explosion.spawn(context.textures, context.sounds, context.entity_system, bomb.entity.sprite.position)
+			let position = bomb.entity.sprite.position
+			Explosion.spawn(context.textures, context.sounds, context.entity_system, position)
 		}
 	}
 

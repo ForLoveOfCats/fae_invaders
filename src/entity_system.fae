@@ -66,7 +66,7 @@ fn iterator(): EntityIterator<T> {
 }
 
 method mut EntityList
-fn push(entity: T): EntityHandle<T> {
+fn push(entity=: T): EntityHandle<T> {
 	self.live_count += 1
 
 	if self.free_ranges.is_empty() {
@@ -104,7 +104,7 @@ fn push(entity: T): EntityHandle<T> {
 }
 
 method mut EntityList
-fn remove(handle: EntityHandle<T>) {
+fn remove(handle=: EntityHandle<T>) {
 	let entity_index = handle.index.(isize)
 
 	let info = self.generations.items[entity_index].&mut
@@ -191,7 +191,7 @@ fn remove(handle: EntityHandle<T>) {
 	// We must not be on an existing range boundary
 	// Insert a new free range at the current range index
 	let range = entity_index..entity_index + 1
-	self.free_ranges.insert(range, middle)
+	self.free_ranges.insert(range, at: middle)
 }
 
 method EntityList
@@ -209,7 +209,7 @@ fn assert_free_ranges_actually_free() {
 	for range in self.free_ranges.items {
 		for entity_index in range {
 			let info = self.generations.get(entity_index)
-			assert(info.may_be_ticked(self.generation).!)
+			assert(info.may_be_ticked(current_generation: self.generation).!)
 		}
 	}
 }
@@ -259,7 +259,7 @@ fn next(): Option<EntityIteratorEntry<T>> {
 		defer self.index += 1
 
 		let info = self.list.generations.get_unchecked(self.index)
-		if info.may_be_ticked(self.list.generation).! => continue
+		if info.may_be_ticked(current_generation: self.list.generation).! => continue
 
 		let entity = self.list.entities.get_mut_unchecked(self.index)
 		let handle = EntityHandle<T> {
@@ -332,10 +332,10 @@ struct Context {
 
 method static Context
 fn new(
-	scene_context: *mut scene.Context
-	scene: *mut Scene.InGame
-	entity_system: *mut EntitySystem
-	entity_list: *EntityList<T>
+	scene_context=: *mut scene.Context
+	scene=: *mut Scene.InGame
+	entity_system=: *mut EntitySystem
+	entity_list=: *EntityList<T>
 ): Context<T> {
 	return Context<T> {
 		viewport_size: scene_context.viewport_size
@@ -351,7 +351,7 @@ fn new(
 }
 
 method mut EntitySystem
-fn tick(scene_context: *mut scene.Context) {
+fn tick(scene_context=: *mut scene.Context) {
 	// Newly added entities are not ticked until the following frame
 	// Removed entities are still ticked on the frame they are removed
 
@@ -366,39 +366,39 @@ fn tick(scene_context: *mut scene.Context) {
 	self.enemy.generation += 1
 	self.explosion.generation += 1
 
-	mut context = Context<Player>.new(scene_context, scene, self, self.player.&)
+	let context = Context<Player>.new(scene_context, scene, self, self.player.&).&mut
 	mut iterator = self.player.iterator()
 	while iterator.next() is entry: Some {
 		context.handle = entry.handle
-		entry.entity.tick(context.&mut)
+		entry.entity.tick(context)
 	}
 
-	mut context = Context<Missile>.new(scene_context, scene, self, self.missile.&)
+	let context = Context<Missile>.new(scene_context, scene, self, self.missile.&).&mut
 	mut iterator = self.missile.iterator()
 	while iterator.next() is entry: Some {
 		context.handle = entry.handle
-		entry.entity.tick(context.&mut)
+		entry.entity.tick(context)
 	}
 
-	mut context = Context<Bomb>.new(scene_context, scene, self, self.bomb.&)
+	let context = Context<Bomb>.new(scene_context, scene, self, self.bomb.&).&mut
 	mut iterator = self.bomb.iterator()
 	while iterator.next() is entry: Some {
 		context.handle = entry.handle
-		entry.entity.tick(context.&mut)
+		entry.entity.tick(context)
 	}
 
-	mut context = Context<Enemy>.new(scene_context, scene, self, self.enemy.&)
+	let context = Context<Enemy>.new(scene_context, scene, self, self.enemy.&).&mut
 	mut iterator = self.enemy.iterator()
 	while iterator.next() is entry: Some {
 		context.handle = entry.handle
-		entry.entity.tick(context.&mut)
+		entry.entity.tick(context)
 	}
 
-	mut context = Context<Explosion>.new(scene_context, scene, self, self.explosion.&)
+	let context = Context<Explosion>.new(scene_context, scene, self, self.explosion.&).&mut
 	mut iterator = self.explosion.iterator()
 	while iterator.next() is entry: Some {
 		context.handle = entry.handle
-		entry.entity.tick(context.&mut)
+		entry.entity.tick(context)
 	}
 
 	// fae.io.terminal.clear()

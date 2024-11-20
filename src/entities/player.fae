@@ -10,7 +10,7 @@ struct Player {
 }
 
 method static Player
-fn spawn(textures: *Textures, entity_system: *mut EntitySystem, viewport_size: Vec2) {
+fn spawn(textures=: *Textures, entity_system=: *mut EntitySystem, viewport_size: Vec2) {
 	entity_system.player.push(Player {
 		sprite: Sprite {
 			texture: textures.player.&
@@ -44,7 +44,7 @@ fn tick(context: *mut Context<Player>) {
 	self.velocity.x = self.velocity.x.max(-TopSpeed).min(TopSpeed)
 
 	let distance = Vec2 { x: self.velocity.x * context.delta, y: 0 }
-	self.sprite.move(context.viewport_size, distance)
+	self.sprite.move(viewport_size: context.viewport_size, distance)
 
 	self.fire_delay -= context.delta
 	if self.fire_delay <= 0 and user_interface.is_fire_pressed() {

@@ -9,7 +9,7 @@ struct Bomb {
 }
 
 method static Bomb
-fn fire(textures: *Textures, sounds: *mut Sounds, entity_system: *mut EntitySystem, position: Vec2) {
+fn fire(textures=: *Textures, sounds=: *mut Sounds, entity_system=: *mut EntitySystem, position: Vec2) {
 	entity_system.bomb.push(Bomb {
 		sprite: Sprite {
 			texture: textures.bomb.&
@@ -26,18 +26,18 @@ fn tick(context: *mut Context<Bomb>) {
 
 	let speed = Speed * context.delta
 	let distance = Vec2 { x: 0, y: speed }
-	let reached = self.sprite.move(context.viewport_size, distance)
+	let reached = self.sprite.move(viewport_size: context.viewport_size, distance)
 
 	if reached.bottom {
 		context.entity_system.bomb.remove(context.handle)
-		Explosion.spawn(context.textures, context.sounds, context.entity_system, self.sprite.position)
+		Explosion.spawn(context.textures, context.sounds, context.entity_system, position: self.sprite.position)
 
 		context.scene.shield_health -= 1
 		context.sounds.shield_damaged.play()
 
 		if context.scene.shield_health <= 0 {
 			let reason = "The Shield Was Detroyed!"
-			context.scene_tracker.transition(.Lost.new(reason))
+			context.scene_tracker.transition(to: .Lost.new(reason))
 		}
 	}
 

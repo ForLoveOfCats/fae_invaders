@@ -32,16 +32,16 @@ extern "GetFontDefault"
 fn get_default_font(): Font
 
 extern "GetMonitorRefreshRate"
-fn get_monitor_refresh_rate(monitor: Monitor): i32
+fn get_monitor_refresh_rate(monitor=: Monitor): i32
 
 extern "GetMonitorWidth"
-fn get_monitor_width(monitor: Monitor): i32
+fn get_monitor_width(monitor=: Monitor): i32
 
 extern "GetMonitorHeight"
-fn get_monitor_height(monitor: Monitor): i32
+fn get_monitor_height(monitor=: Monitor): i32
 
 extern "ClearBackground"
-fn clear_background(color: Color)
+fn clear_background(color=: Color)
 
 extern "BeginDrawing"
 fn begin_drawing()
@@ -56,7 +56,7 @@ extern "EndTextureMode"
 fn end_texture_mode()
 
 extern "SetTargetFPS"
-fn set_target_fps(fps: i32)
+fn set_target_fps(fps=: i32)
 
 extern "SetWindowSize"
 fn set_window_size(width: i32, height: i32)
@@ -65,55 +65,55 @@ extern "SetWindowPosition"
 fn set_window_position(x: i32, y: i32)
 
 extern "SetTextureFilter"
-fn set_texture_filter(texture: Texture2D, filter: i32)
+fn set_texture_filter(texture=: Texture2D, filter=: i32)
 
 extern "GetFrameTime"
 fn get_frame_time(): f32
 
 extern "SetTraceLogLevel"
-fn set_trace_log_level(log_level: i32)
+fn set_trace_log_level(log_level=: i32)
 
 extern "SetRandomSeed"
-fn set_random_seed(seed: u32)
+fn set_random_seed(seed=: u32)
 
 extern "GetRandomValue"
-fn get_random_value(min: i32, max: i32): i32
+fn get_random_value(min=: i32, max=: i32): i32
 
 extern "DrawRectangleRec"
-fn draw_rectangle(rectangle: Rectangle, color: Color)
+fn draw_rectangle(rectangle=: Rectangle, color: Color)
 
 extern "LoadImage"
-fn load_image(path: *u8): Image
+fn load_image(path=: *u8): Image
 
 extern "LoadRenderTexture"
 fn load_render_texture(width: i32, height: i32): RenderTexture2D
 
 extern "LoadTexture"
-fn load_texture(path: *u8): Texture2D
+fn load_texture(path=: *u8): Texture2D
 
 extern "LoadTextureFromImage"
-fn load_texture_from_image(image: Image): Texture2D
+fn load_texture_from_image(image=: Image): Texture2D
 
 extern "UnloadRenderTexture"
-fn unload_render_texture(texture: RenderTexture2D)
+fn unload_render_texture(texture=: RenderTexture2D)
 
 extern "UnloadTexture"
-fn unload_texture(texture: Texture2D)
+fn unload_texture(texture=: Texture2D)
 
 extern "DrawTextureV"
-fn draw_texture(texture: Texture2D, position: Vec2, tint: Color)
+fn draw_texture(texture=: Texture2D, position: Vec2, tint: Color)
 
 extern "DrawTexturePro"
-fn draw_texture_pro(texture: Texture2D, source: Rectangle, destination: Rectangle, origin: Vec2, rotation: f32, tint: Color)
+fn draw_texture_pro(texture=: Texture2D, source: Rectangle, destination: Rectangle, origin: Vec2, rotation: f32, tint: Color)
 
 extern "DrawTextEx"
 fn draw_text(font: Font, text: *u8, position: Vec2, font_size: f32, spacing: f32, tint: Color)
 
 extern "IsKeyDown"
-fn is_key_down(key: i32): bool
+fn is_key_down(key=: i32): bool
 
 extern "IsKeyPressed"
-fn is_key_pressed(key: i32): bool
+fn is_key_pressed(key=: i32): bool
 
 extern "InitAudioDevice"
 fn init_audio_device()
@@ -122,7 +122,7 @@ extern "CloseAudioDevice"
 fn close_audio_device()
 
 extern "SetMasterVolume"
-fn set_master_volume(volume: f32)
+fn set_master_volume(volume=: f32)
 
 extern "GetMasterVolume"
 fn get_master_volume(): f32
@@ -131,25 +131,25 @@ extern "IsAudioDeviceReady"
 fn is_audio_device_ready(): bool
 
 extern "LoadSound"
-fn load_sound(file_name: *u8): Sound
+fn load_sound(path=: *u8): Sound
 
 extern "UnloadSound"
-fn unload_sound(sound: Sound)
+fn unload_sound(sound=: Sound)
 
 extern "LoadSoundAlias"
-fn load_sound_alias(source: Sound): Sound
+fn load_sound_alias(source=: Sound): Sound
 
 extern "UnloadSoundAlias"
-fn unload_sound_alias(alias: Sound)
+fn unload_sound_alias(alias=: Sound)
 
 extern "PlaySound"
-fn play_sound(sound: Sound)
+fn play_sound(sound=: Sound)
 
 extern "StopSound"
-fn stop_sound(sound: Sound)
+fn stop_sound(sound=: Sound)
 
 extern "IsSoundPlaying"
-fn is_sound_playing(sound: Sound): bool
+fn is_sound_playing(sound=: Sound): bool
 
 struct Monitor {
 	id: i32
@@ -190,12 +190,12 @@ fn black(): Color {
 }
 
 method static Color
-fn rgb(r: u8, g: u8, b: u8): Color {
+fn rgb(r=: u8, g=: u8, b=: u8): Color {
 	return Color { r, g, b, a: 255 }
 }
 
 method static Color
-fn rgba(r: u8, g: u8, b: u8, a: u8): Color {
+fn rgba(r=: u8, g=: u8, b=: u8, a=: u8): Color {
 	return Color { r, g, b, a }
 }
 
