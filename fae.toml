@@ -1,4 +1,5 @@
 project_name = "invaders"
 source_directory = "./src"
 
+linux_linker = "ld.lld"
 linux_additional_linker_objects = ["./raylib/src/libraylib.a"]
