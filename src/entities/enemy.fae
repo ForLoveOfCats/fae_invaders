@@ -58,7 +58,7 @@ fn tick(context: *mut Context<Enemy>) {
 		self.distance_traveled += distance
 
 		match self.direction {
-			Left {
+			Left => {
 				self.sprite.position.x -= distance
 				if self.distance_traveled >= self.max_distance {
 					self.direction = Direction.Right
@@ -67,7 +67,7 @@ fn tick(context: *mut Context<Enemy>) {
 				}
 			}
 
-			Right {
+			Right => {
 				self.sprite.position.x += distance
 				if self.distance_traveled >= self.max_distance {
 					self.direction = Direction.Left

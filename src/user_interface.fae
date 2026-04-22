@@ -28,7 +28,7 @@ fn new(text: str, pressed: *mut bool): Item {
 method mut Item
 fn tick(scene_context: *mut scene.Context, rectangle: Rectangle, selected: bool) {
 	match self {
-		Button {
+		Button => {
 			draw_rectangle(rectangle, color: Color.rgb(200, 200, 200))
 
 			const TextOffset = SelectionInset + SelectionWidth + SelectionInset
